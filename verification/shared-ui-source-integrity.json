@@ -1,0 +1,30 @@
+{
+  "baseline": "32bc8954ff872d0e1a05ddfae81561b6dbecef69",
+  "files": [
+    {
+      "source_path": "play-services-core/src/main/kotlin/org/microg/gms/wallet/activity/PaymentsScreen.kt",
+      "shared_path": "wallet-bender3-ui/src/main/kotlin/org/microg/gms/wallet/activity/PaymentsScreen.kt",
+      "sha256": "4d6f3df8cab9498b826b01db21bd160d4bbcc6d32141bb3cc157dc49505c71e4",
+      "source_unchanged": true
+    },
+    {
+      "source_path": "play-services-core/src/main/kotlin/org/microg/gms/wallet/activity/ComponentTreeManager.kt",
+      "shared_path": "wallet-bender3-ui/src/main/kotlin/org/microg/gms/wallet/activity/ComponentTreeManager.kt",
+      "sha256": "a85095951bc3e895fec6567773e705cc9be7368c53cd379c2862e254d9910954",
+      "source_unchanged": true
+    },
+    {
+      "source_path": "play-services-core/src/main/kotlin/org/microg/gms/wallet/activity/EventEngine.kt",
+      "shared_path": "wallet-bender3-ui/src/main/kotlin/org/microg/gms/wallet/activity/EventEngine.kt",
+      "sha256": "a7b4ac88632149dc625fb19da0ff08a7b3960d541b7da41ffb6ad6adcc3b0764",
+      "source_unchanged": true
+    }
+  ],
+  "payment_verified": false,
+  "framework_build": {
+    "task": ":play-services-core:assembleVtmHuaweiDebug",
+    "successful": true,
+    "apk_sha256": "44487926de2e25d56d5a86b9026dd0cba32a6ad7cbfdfae159f467bad5e1cd68",
+    "installed_on_phone": false
+  }
+}

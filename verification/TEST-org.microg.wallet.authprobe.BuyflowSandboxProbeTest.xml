@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.microg.wallet.authprobe.BuyflowSandboxProbeTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-27T07:48:39.398Z" hostname="Arch" time="0.034">
+  <properties/>
+  <testcase name="invalidLengthsNeverProduceSuccessfulStructure" classname="org.microg.wallet.authprobe.BuyflowSandboxProbeTest" time="0.01"/>
+  <testcase name="httpSuccessBodyWithUiErrorIsNeverPaymentSuccess" classname="org.microg.wallet.authprobe.BuyflowSandboxProbeTest" time="0.01"/>
+  <testcase name="wireEncodingMatchesProtobufGoldenValues" classname="org.microg.wallet.authprobe.BuyflowSandboxProbeTest" time="0.008"/>
+  <testcase name="publicTestRequestUsesBuyflowFieldsAndExactInitializer" classname="org.microg.wallet.authprobe.BuyflowSandboxProbeTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

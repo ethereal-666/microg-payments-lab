@@ -1,0 +1,23 @@
+{
+  "requested_environment": "TEST",
+  "environment_verified": false,
+  "endpoint": "buyflowservice/initialize",
+  "token_exposed": false,
+  "payment_attempted": false,
+  "payment_verified": false,
+  "token_info_http_status": 200,
+  "sierra_scope_verified": true,
+  "token_valid_at_probe": true,
+  "http_status": 200,
+  "response_bytes": 8334,
+  "event": "initialize_ui_error",
+  "response_is_protobuf": true,
+  "response_structure": "1:2(59),2:2(4441),6:0,7:2(3824)",
+  "response_nested_structure": "1={1:2(39),3:2(16)};2={1:0,2:2(89),5:2(4258),7:2(57),10:0,13:2(22),15:0};status6=5;7={1:2(26),1:2(1895),2:2(26),2:2(1867)};",
+  "flow_instruction": 5,
+  "has_native_page": false,
+  "flow_instruction_name": "HANDLE_UI_ERROR",
+  "google_error_message": "发生意外错误，请稍后再试。",
+  "verified_at_utc": "2026-10-27T07:47:26.395332+00:00",
+  "interpretation": "Valid Sierra token and HTTP 200, but HANDLE_UI_ERROR with no native page. Payment not verified."
+}

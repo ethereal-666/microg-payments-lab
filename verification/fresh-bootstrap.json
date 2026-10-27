@@ -1,6 +1,7 @@
 {
-  "fresh_patch_applied": true,
-  "repeat_is_idempotent": true,
-  "patch_sha256": "dcc4f72b183fd9412cca5f42cb422d647a3daede7c794b823d606506cd142386",
-  "tested_source_diff_matches": true
+  "upstream_commit": "32bc8954ff872d0e1a05ddfae81561b6dbecef69",
+  "fresh_apply": "applied",
+  "repeat_prepare": "already_applied",
+  "patch_sha256": "d3f66eb9784958bef9cd7b9a13d6909fcd9811a3a2e2c1e7ea747abc8dcebc42",
+  "payment_verified": false
 }

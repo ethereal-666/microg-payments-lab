@@ -22,10 +22,26 @@
       "failures": "0",
       "errors": "0",
       "skipped": "0",
-      "time": "0.98"
+      "time": "0.931"
+    },
+    "buyflow_probe": {
+      "name": "org.microg.wallet.authprobe.BuyflowSandboxProbeTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.034"
+    },
+    "auth_privacy": {
+      "name": "org.microg.gms.auth.AuthPrivacyTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.139"
     }
   },
-  "total_tests": 26,
+  "total_tests": 32,
   "payment_verified": false,
   "scope": "Unit tests and APK builds; device evidence is recorded separately"
 }

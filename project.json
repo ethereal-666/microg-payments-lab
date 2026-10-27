@@ -15,9 +15,9 @@
     "commit": "32bc8954ff872d0e1a05ddfae81561b6dbecef69"
   },
   "protocol_reference": "Google Wallet SDK 20.0.0",
-  "next_gate": "Evaluate GmsCore-internal authorization on a recoverable test environment, then implement and verify the actual Google TEST web buy flow; independent client registration is not a sufficient fix",
+  "next_gate": "Reuse upstream Bender3 schema, UI and state engine; implement source-backed web buyflow adapters and verify a genuine Google TEST result",
   "not_implemented": [
-    "Google-backed web payment initialization and token acquisition",
+    "Successful Google-backed web payment initialization and payment credential acquisition",
     "Production payment UI and authorization",
     "Chrome-to-provider end-to-end payment",
     "NFC / tap-and-pay",
@@ -30,7 +30,7 @@
     "skipped": 0,
     "scope": "ABI and callback round trips only; no on-device payment verification"
   },
-  "device_validation": "remote_native_handoff_passed; registered_independent_oauth_client_rejected_with_INVALID_SCOPE",
+  "device_validation": "remote native handoff passed; delegated Sierra token validated by Google; initializer returns HANDLE_UI_ERROR, no payment page",
   "native_flow_tests": {
     "tests": 13,
     "failures": 0,
@@ -41,7 +41,7 @@
     "tests": 8,
     "failures": 0,
     "errors": 0,
-    "scope": "Allowlisted redaction tests; registered independent client observed INVALID_SCOPE; no token acquired"
+    "scope": "Allowlisted redaction; ordinary OAuth client rejected, delegated Sierra token separately validated"
   },
   "bootstrap_tests": {
     "tests": 4,
@@ -58,17 +58,26 @@
     "registered_client_authorization": "verification/authorization-route-result.json",
     "noninteractive_auth": "verification/device-auth-noninteractive.json",
     "provider_build": "verification/provider-build-result.json",
-    "provider_install_preflight": "verification/provider-install-preflight.json"
+    "provider_install_preflight": "verification/provider-install-preflight.json",
+    "delegated_authorization": "verification/device-auth-delegated.json",
+    "buyflow_initialize": "verification/device-buyflow-initialize.json"
   },
   "device_instrumentation": {
     "native_tests": 3,
     "native_failures": 0,
     "auth_observation_tests": 1,
     "authorization_succeeded": false,
-    "payment_verified": false
+    "payment_verified": false,
+    "delegated_authorization_succeeded": true
   },
   "host_tests": {
     "tests": 9,
     "failures": 0
+  },
+  "shared_ui_module": "wallet-bender3-ui",
+  "android_unit_tests": {
+    "tests": 32,
+    "failures": 0,
+    "payment_verified": false
   }
 }

@@ -8,22 +8,29 @@
 验收：协议测试通过，未知字段不破坏外层 Binder 参数；金额、币种和商品项未丢失；
 原生界面所需的 Status 6 / PendingIntent 能通过回调传递。该阶段不具备付款能力。已通过 5 项协议测试及 13 项原生交接测试；界面目前只返回不可用或取消。
 
-## P1：确定能取得真实测试支付数据的后端路线
+## P1：基于已有开源实现移植网页买单
 
-这是项目的首要可行性关口，尚未实现。独立 Sierra OAuth 授权探针在注册客户端前返回
-`UNREGISTERED_ON_API_CONSOLE`，注册并添加测试用户后返回 `INVALID_SCOPE`；控制台也拒绝该 scope。
-该独立伴随应用路线未能取得令牌。不要继续把客户端注册当作唯一阻碍。
-下一步应在可恢复的框架测试环境核对 GmsCore 内部调用身份与网页买单流程；本机框架签名不同，
-没有覆盖安装。不能把伴随应用结果推广为所有 GmsCore 身份下的授权结论。
+2026-10-27 真机已通过 microG 的现有委托授权接口取得 Sierra token，Google tokeninfo 返回 200 并确认 scope。
+独立普通 OAuth 客户端的 INVALID_SCOPE 仍然属实，但不能再将其列为全部授权路线的结论。
+初始化返回 HTTP 200 后，进一步解码的指令是 HANDLE_UI_ERROR（5），没有有效原生页面，不能记为初始化成功或能付款。
 
-1. 对照原生 `grae` / `gqxm` 的初始化、账号资格与结果处理流程，明确所需请求和响应结构。
-2. 核对 microG 的 Bender3 / PurchaseManager 与网页付款的协议交集。
-3. 使用合成数据和 Google TEST 环境完成初始化，明确账号授权与商户上下文的绑定方式。
-4. 如果某项服务端条件不可满足，保留错误证据；不要继续用成功占位符搭建后续功能。
+根据用户要求，冻结逐字段在线尝试，改为先复用有来源的代码。检索与源码核对清单见
+[research/opensource-reuse-plan.json](research/opensource-reuse-plan.json)。本次没有找到完整可直接替代 GMS 的网页付款开源服务。
 
-验收：真实 Google TEST 流程返回可验证的测试结果，来源和环境清楚；这仍不证明生产支付可用。
-目前没有这一证据。不要直接将 Chrome encryptedParameters 作为内购协议 encryptedPayload，
-也不要将内购回执作为 WebPaymentData 的支付令牌。
+| 能力 | 复用来源 | 需要新增的适配 |
+| --- | --- | --- |
+| protobuf 与代码生成 | microG PR #3507 的 Purchase.proto / Wire | 网页 buyflow 独有的请求与响应模型；不能将 IAP 字段硬套进去 |
+| 原生组件与布局 | 同一 PR 的 PaymentsScreen、ComponentTreeManager | 网页响应到公共页面模型的转换 |
+| 交互状态 | 同一 PR 的 EventEngine | 网页会话的输入、提交与结果回传 |
+| 会话与传输结构 | PaymentContext | 分离买单端点、账号授权、商户上下文；清理上游调试数据输出后才能用于支付 |
+| 测试商户请求 | Google Android quickstart | 作为验收输入，示例本身仍依赖 GMS |
+| 最终 ECv2 测试数据验证 | Tink paymentmethodtoken | 独立测试商户侧验签；不能替代框架付款服务 |
+
+已将三个原有 UI/状态源文件原样移入 wallet-bender3-ui 共享模块，保持包名和公开函数不变，完整框架改为依赖该模块。
+源文件 SHA-256 和与固定上游版本逐字节一致的核对结果记录在 verification/shared-ui-source-integrity.json。
+
+后续移植必须先写清请求/响应适配契约，再接共享渲染器。每个缺失字段都需要开源定义或明确协议证据；
+手写实验报文只保留为失败诊断，不进入生产支付路径。验收仍要求 Google TEST 真实支付数据及浏览器回传。
 
 ## P2：Android 界面与 Chrome 集成
 

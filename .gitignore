@@ -41,3 +41,8 @@
 !/verification/native-probe-context-initialized.txt
 __pycache__/
 *.pyc
+
+!/verification/device-auth-delegated.json
+!/verification/device-buyflow-initialize.json
+!/verification/device-buyflow-internal-sandbox.json
+!/verification/shared-ui-source-integrity.json

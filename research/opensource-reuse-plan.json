@@ -1,0 +1,128 @@
+{
+  "checked_at": "2026-10-27 Asia/Hong_Kong",
+  "decision": "Reuse existing microG Bender3 schemas, UI and state engine; implement only web-buyflow adapters after the protocol gap is documented. Freeze handcrafted initializer probing.",
+  "complete_open_source_web_gpay_provider_found": false,
+  "search_limits": "GitHub repository/code/PR search and official project sources; absence from these results is not proof that no implementation exists.",
+  "sources": [
+    {
+      "project": "microg/GmsCore",
+      "url": "https://github.com/microg/GmsCore/pull/3507",
+      "license": "Apache-2.0",
+      "implementation_commit": "53c0aac618b6a01eef0295a4191f9b9adf04fb6d",
+      "checked_master": "342c28011b46a164b969f62acaaa32941927c4b4",
+      "baseline": "32bc8954ff872d0e1a05ddfae81561b6dbecef69",
+      "adopt": [
+        "Purchase.proto / Wire generated classes",
+        "PaymentsScreen / ComponentTreeManager / EventEngine",
+        "PaymentContext session and transport design"
+      ],
+      "limits": [
+        "Existing initializer uses ui2/purchasemanagerservice for IAP. It is not a complete WebPaymentData buyflow.",
+        "Do not reuse WidgetResultIntentBuilder IAP success as a web payment credential.",
+        "Checked master still returns false for readiness and does not implement loadWebPaymentData."
+      ],
+      "baseline_schema_and_payment_context_equal_master": true
+    },
+    {
+      "project": "tink-crypto/tink-java-apps",
+      "url": "https://github.com/tink-crypto/tink-java-apps",
+      "license": "Apache-2.0",
+      "commit": "c5efb898ba6a2a8531d43c6b6d4c8a8fe46243ea",
+      "adopt": [
+        "PaymentMethodTokenRecipient for verification of future Google TEST ECv2 output in a separate test merchant"
+      ],
+      "limits": [
+        "Merchant-side token processing, not GMS authorization or buyflow implementation.",
+        "Do not use PaymentMethodTokenSender test fixtures as proof that Google returned payment data."
+      ]
+    },
+    {
+      "project": "google-pay/android-quickstart",
+      "url": "https://github.com/google-pay/android-quickstart",
+      "license": "Apache-2.0",
+      "commit": "fd898fe31e616d2948b2bb445ad565bf3fcce781",
+      "adopt": [
+        "Canonical merchant request and TEST configuration as acceptance fixtures"
+      ],
+      "limits": [
+        "PaymentsUtil.createPaymentsClient calls Wallet.getPaymentsClient; the sample still requires a functioning GMS provider."
+      ]
+    },
+    {
+      "project": "whyorean/GPlayApi",
+      "url": "https://github.com/whyorean/GPlayApi",
+      "license": "GPL-3.0",
+      "commit": "e90581facaccfd53f424c60ba84ce316bc67f3d3",
+      "adopt": [],
+      "limits": [
+        "PurchaseHelper operates Play Store acquisition/delivery. Not a web card-payment provider.",
+        "No code copied into this Apache-2.0 project."
+      ]
+    },
+    {
+      "project": "doug-leith/android-protobuf-decoding",
+      "url": "https://github.com/doug-leith/android-protobuf-decoding",
+      "license": null,
+      "adopt": [],
+      "limits": [
+        "Examined playstore.proto contains wallet/buyflow telemetry enums, not a full buyflow service schema. No license verified; no code copied."
+      ]
+    },
+    {
+      "project": "Romern/gms_decompiled",
+      "url": "https://github.com/Romern/gms_decompiled",
+      "license": null,
+      "adopt": [],
+      "limits": [
+        "Search results include old buyflow and loadWebPaymentData implementation references. Decompiled Google code is not an open-source implementation; no redistribution."
+      ]
+    },
+    {
+      "project": "DaVinci9196/GmsCore iap-back-navigation",
+      "url": "https://github.com/DaVinci9196/GmsCore/commit/8d197b86dffd852978c59d0888d3d3ca527e0cd1",
+      "license": "Apache-2.0",
+      "adopt": [],
+      "limits": [
+        "Compared against baseline: changes are vending-app back navigation only; no web payment implementation."
+      ]
+    }
+  ],
+  "implemented_reuse": {
+    "module": "wallet-bender3-ui",
+    "files": [
+      {
+        "source_path": "play-services-core/src/main/kotlin/org/microg/gms/wallet/activity/PaymentsScreen.kt",
+        "shared_path": "wallet-bender3-ui/src/main/kotlin/org/microg/gms/wallet/activity/PaymentsScreen.kt",
+        "sha256": "4d6f3df8cab9498b826b01db21bd160d4bbcc6d32141bb3cc157dc49505c71e4",
+        "source_unchanged": true
+      },
+      {
+        "source_path": "play-services-core/src/main/kotlin/org/microg/gms/wallet/activity/ComponentTreeManager.kt",
+        "shared_path": "wallet-bender3-ui/src/main/kotlin/org/microg/gms/wallet/activity/ComponentTreeManager.kt",
+        "sha256": "a85095951bc3e895fec6567773e705cc9be7368c53cd379c2862e254d9910954",
+        "source_unchanged": true
+      },
+      {
+        "source_path": "play-services-core/src/main/kotlin/org/microg/gms/wallet/activity/EventEngine.kt",
+        "shared_path": "wallet-bender3-ui/src/main/kotlin/org/microg/gms/wallet/activity/EventEngine.kt",
+        "sha256": "a7b4ac88632149dc625fb19da0ff08a7b3960d541b7da41ffb6ad6adcc3b0764",
+        "source_unchanged": true
+      }
+    ],
+    "network_endpoints_added": false,
+    "payment_verified": false
+  },
+  "next_adapter_contract": [
+    "Exact web request -> existing typed protobuf request, with provenance for fields and environment selection.",
+    "Actual web response -> shared component tree/page model; distinguish flow instructions from HTTP status.",
+    "Google TEST result -> WebPaymentData, preserving merchant origin and caller UID."
+  ],
+  "current_device_result": {
+    "authorization": "Google tokeninfo HTTP 200; Sierra scope present",
+    "initializer_http_status": 200,
+    "flow_instruction": 5,
+    "flow_instruction_name": "HANDLE_UI_ERROR",
+    "native_payment_page": false,
+    "payment_verified": false
+  }
+}

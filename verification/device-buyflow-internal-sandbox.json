@@ -1,0 +1,13 @@
+{
+  "environment": "INTERNAL_SANDBOX",
+  "endpoint": "buyflowservice/initialize",
+  "token_exposed": false,
+  "payment_attempted": false,
+  "payment_verified": false,
+  "http_status": 401,
+  "response_bytes": 4094,
+  "event": "initialize_http_error",
+  "response_is_protobuf": true,
+  "response_structure": "1:2(14),2:2(246),6:0,7:2(3824)",
+  "interpretation": "First endpoint experiment returned 401. This is the internal sandbox selected by environment 0/2, not public ENVIRONMENT_TEST=3; it does not establish that the Sierra token is invalid."
+}

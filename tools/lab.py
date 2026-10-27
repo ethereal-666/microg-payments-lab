@@ -57,6 +57,7 @@ def verify(checkout, java_home):
                ":play-services-api:testDebugUnitTest", "--tests",
                "org.microg.gms.wallet.WebPaymentWireTest",
                ":wallet-web-core:testDebugUnitTest", ":wallet-auth-probe:testDebugUnitTest",
+               ":play-services-base-core:testDebugUnitTest",
                ":wallet-web-harness:assembleDebug", ":wallet-auth-probe:assembleDebug",
                ":wallet-web-harness:assembleDebugAndroidTest", ":wallet-auth-probe:assembleDebugAndroidTest"]
     subprocess.run(command, cwd=checkout, env=env, check=True)
@@ -65,7 +66,9 @@ def verify(checkout, java_home):
     summaries = {}
     suites = [("protocol", "play-services-api", "org.microg.gms.wallet.WebPaymentWireTest", 5),
               ("native_flow", "wallet-web-core", "org.microg.gms.wallet.web.WebPaymentBridgeTest", 13),
-              ("auth_diagnostics", "wallet-auth-probe", "org.microg.wallet.authprobe.AuthProbeReportTest", 8)]
+              ("auth_diagnostics", "wallet-auth-probe", "org.microg.wallet.authprobe.AuthProbeReportTest", 8),
+              ("buyflow_probe", "wallet-auth-probe", "org.microg.wallet.authprobe.BuyflowSandboxProbeTest", 4),
+              ("auth_privacy", "play-services-base/core", "org.microg.gms.auth.AuthPrivacyTest", 2)]
     for name, module, test_class, minimum in suites:
         report = checkout / module / "build/test-results/testDebugUnitTest" / ("TEST-" + test_class + ".xml")
         suite = ET.parse(report).getroot()

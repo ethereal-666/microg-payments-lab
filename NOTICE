@@ -12,3 +12,7 @@ isolated diagnostic apps, and tests. New project code is licensed under Apache-2
 Google APKs, decompiled implementations, signing keys, account data and credentials
 are not distributed by this repository. Runtime dependencies retain their own
 licenses. No affiliation with or endorsement by Google, Huawei or microG is implied.
+
+The wallet-bender3-ui module moves PaymentsScreen.kt, ComponentTreeManager.kt
+and EventEngine.kt from the pinned microG baseline without source changes.
+Original 2026 microG copyright and Apache-2.0 notices are retained.

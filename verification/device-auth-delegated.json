@@ -1,0 +1,23 @@
+{
+  "verified_at_utc": "2026-10-27T07:30:03.951998+00:00",
+  "route": "existing_microg_user_consented_package_delegation",
+  "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+  "authorization_succeeded": true,
+  "token_exposed": false,
+  "payment_verified": false,
+  "provider_replaced": false,
+  "observations": [
+    {
+      "event": "interactive_authorization_required",
+      "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+      "token_exposed": false,
+      "payment_attempted": false
+    },
+    {
+      "event": "token_acquired",
+      "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+      "token_exposed": false,
+      "payment_attempted": false
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.microg.gms.auth.AuthPrivacyTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-27T07:18:21.948Z" hostname="Arch" time="1.139">
+  <properties/>
+  <testcase name="responseSummaryContainsNoIdentityOrCredentialValues" classname="org.microg.gms.auth.AuthPrivacyTest" time="1.109"/>
+  <testcase name="actualAuthExchangeRetainsValuesWithoutLoggingBodies" classname="org.microg.gms.auth.AuthPrivacyTest" time="0.03"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -14,7 +14,8 @@ Pura 70 / Android API 31 已安装两个测试应用。原生实验页面能打�
 
 后续已创建自有 Android OAuth 客户端并添加同一账号为测试用户；交互授权返回 `INVALID_SCOPE`，
 Cloud 控制台也拒绝 Sierra scope。后续证据见 `verification/authorization-route-result.json`。
-注册客户端没有解决本路线的问题；尚未测试集成到 GmsCore 身份内时的授权情况。
+注册客户端没有解决普通客户端路线的问题。后续通过现有 microG 委托接口取得有效 Sierra 令牌，Google tokeninfo 已确认 scope；
+初始化实验的 HTTP 200 被进一步解码为 HANDLE_UI_ERROR（5），没有有效付款页。见 verification/device-buyflow-initialize.json。
 
 最初 harness 在应用进程内本地 transact。升级后的服务位于 `:wallet` 独立进程，
 3 项 instrumentation 已验证真实 IPC、PendingIntent 和页面返回；新证据是 `verification/device-native-remote.json`。
@@ -71,7 +72,8 @@ adb -s SERIAL shell am start -n org.microg.wallet.authprobe/.AuthProbeActivity
 
 用户自己点击“选择账号并检查授权”，选择 Google 账号，并自行处理可能出现的授权页面。
 目标 scope 是 microG 现有支付验证代码使用的 `oauth2:https://www.googleapis.com/auth/sierra`。
-应用自身不发 HTTP 请求；现有微服务认证器可能联网取得授权。
+普通 AuthProbeActivity 不发 HTTP 请求；现有微服务认证器可能联网取得授权。
+DelegatedAuthActivity 是单独的联网研究入口，结果与普通客户端观测分开保存。
 
 结果分类：
 
@@ -99,3 +101,16 @@ adb -s SERIAL uninstall org.microg.wallet.authprobe
 ```
 
 清理测试应用不会主动修改现有 microG 的安装或 Google 账号；授权撤销由系统账号设置管理。
+
+## 已冻结的委托授权/初始化实验
+
+DelegatedAuthActivity 使用 microG 现有的 package delegation 功能，固定请求 Sierra scope。
+它不接收任意账号、scope、包名或证书输入；需要同意的 microG 页面不会被程序自动批准。
+注意 microG 的身份委托权限本身比单个 scope 更广，不能将其描述成单个 scope 的系统权限。
+
+已取得的真实结果为：Google tokeninfo 200、Sierra scope 存在；网页买单返回 HANDLE_UI_ERROR，未获得支付数据。
+按用户要求，暂不继续逐字段在线尝试。先基于已有开源实现补齐网页适配契约，再恢复真机验收。
+原始响应只保留在测试应用私有、禁止备份的目录中，不进入项目仓库。
+
+wallet-bender3-ui 的源代码来自固定 microG 上游版本，三个文件逐字节保持一致；模块抽取已通过完整 Huawei 框架构建。
+这项构建验证不代表它已连接网页支付后端，也不代表真机已安装该框架。

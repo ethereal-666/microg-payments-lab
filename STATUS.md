@@ -12,12 +12,15 @@
 | 完整 Huawei GmsCore APK | 构建、签名验证通过；未安装 | verification/provider-build-result.json |
 | 独立授权探针、自有 Android OAuth 客户端 | 注册后交互请求返回 INVALID_SCOPE，无令牌 | verification/authorization-route-result.json |
 | 非交互授权观测 | 单独记录，需要授权不能当作成功 | verification/device-auth-noninteractive.json |
-| Google TEST 初始化、真实支付数据、Chrome 商户集成 | 未实现/未通过 | project.json |
+| microG 委托 Sierra 授权 | 真机取得令牌，Google tokeninfo 确认 scope | verification/device-auth-delegated.json、verification/device-buyflow-initialize.json |
+| 网页买单初始化实验 | HTTP 200，但 HANDLE_UI_ERROR（5），无有效付款页 | verification/device-buyflow-initialize.json |
+| 开源组件复用 | 三个 Bender3 UI/状态源文件原样抽到共享模块 | research/opensource-reuse-plan.json |
+| Google TEST 支付数据、Chrome 商户集成 | 未实现/未通过 | project.json |
 
 ## 实际阻碍
 
-1. 自有独立 Android 客户端无法通过本轮 Sierra 授权。Cloud 控制台同样拒绝该 scope，不能认为
-   注册客户端后就具备 Google Pay 付款授权。Google 的[公开 scope 说明](https://developers.google.com/identity/protocols/oauth2/scopes)
+1. 普通独立客户端的 Sierra 授权失败，但现有 microG 的用户同意委托接口已经取得有效 Sierra 令牌。
+   因此当前不再以授权失败为首要阻碍；Cloud 客户端注册本身仍不足以取得权限。Google 的[公开 scope 说明](https://developers.google.com/identity/protocols/oauth2/scopes)
    也不能替代实际服务端资格验证。
 2. 手机已安装 microG 的签名与本机构建不同。没有相同私钥，不能普通覆盖更新；卸载认证器可能丢失账号状态，
    本轮没有这样操作。证据为 verification/provider-install-preflight.json。
@@ -26,8 +29,10 @@
 
 ## 可继续研究的路线
 
-在可恢复的测试环境中，以实际 GmsCore 包身份验证内部授权，再对照网页买单流程实现后端。
+已验证在原手机保留现有 microG 的情况下取得授权。下一步基于上游 Bender3 的模型、UI 和状态引擎实现网页买单适配。
 本轮独立探针的失败不能推广为此路线必然失败，也没有证据证明此路线一定能在原机无损安装并付款。
 下一阶段验收必须是 Google TEST 环境的真实结果；测试用回调、界面或成功占位数据不满足验收。
 
 仓库包含 Apache-2.0 代码、microG 补丁与脱敏结果，不包含 Google APK/反编译源码、账号、令牌或签名私钥。
+
+用户要求转向开源复用后，已停止继续逐字段在线探测。模拟器已按用户要求移除，真机 microG 未替换。

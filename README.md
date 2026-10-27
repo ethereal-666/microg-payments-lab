@@ -28,7 +28,8 @@ HarmonyOS 4.2.0.242 / Android SDK 31。NFC 刷卡和 HarmonyOS NEXT 不属于当
 独立授权探针最初收到 `UNREGISTERED_ON_API_CONSOLE`。注册自有 Android OAuth 客户端、添加测试账号后，
 交互请求返回 `INVALID_SCOPE`，Cloud 控制台也拒绝添加 Sierra scope。没有取得令牌。
 仅注册 OAuth 客户端不足以解决授权，详见 [OAUTH_SETUP.md](OAUTH_SETUP.md)。
-这不能推断以 GmsCore 自身身份运行时的授权结果；该集成路线尚未实机验证。
+后续真机测试通过 microG 的现有委托授权功能取得了有效 Sierra 令牌，Google tokeninfo 已确认 scope。
+买单接口虽返回 HTTP 200，解码结果为 HANDLE_UI_ERROR，没有有效付款页面。
 完整 Huawei GmsCore APK 已构建，但与手机已安装版本的签名不同，未覆盖安装。
 尚未接入能付款的 Google 后端。
 一次类加载、界面唤起或 OAuth 授权成功都不代表支付已可用。
@@ -73,7 +74,7 @@ python tools/device.py native --serial YOUR_AUTHORIZED_DEVICE_SERIAL
 python tools/device.py auth --serial YOUR_AUTHORIZED_DEVICE_SERIAL
 ```
 
-当前验证包括 5 项协议测试、13 项原生交接流程测试、8 项授权诊断测试，以及两个测试 APK 的构建。
+当前验证包括协议、原生交接、授权诊断、初始化报文检查和授权日志脱敏；测试结果按套件分别保存。
 APK 会复制到本地 `artifacts/`，校验值写入 `verification/artifacts.json`；APK 不纳入源码仓库。
 接手机后的步骤见 [DEVICE_TESTS.md](DEVICE_TESTS.md)。
 `device.py` 会检查 instrumentation 的实际完成结果，不能把 ADB 退出码 0 当作测试通过；
@@ -88,3 +89,6 @@ APK 会复制到本地 `artifacts/`，校验值写入 `verification/artifacts.js
 Google 签名的、适配设备 Android 版本的原始 APK。它不会替换安装着的 microG。
 
 下一步的实验与验收条件见 [ROADMAP.md](ROADMAP.md)。
+
+2026-10-27 已转为优先复用开源实现：wallet-bender3-ui 原样复用上游三个 UI/状态文件。
+来源、固定版本、许可与适配边界见 [开源复用清单](research/opensource-reuse-plan.json) 和 [ROADMAP.md](ROADMAP.md)。
