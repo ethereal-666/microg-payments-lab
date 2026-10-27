@@ -8,6 +8,8 @@
 !/ROADMAP.md
 !/DEVICE_TESTS.md
 !/OAUTH_SETUP.md
+!/NOTICE
+!/STATUS.md
 !/project.json
 !/tools/
 !/tests/
@@ -30,6 +32,11 @@
 !/verification/fresh-bootstrap.json
 !/verification/device-native-flow.json
 !/verification/device-auth-probe.json
+!/verification/device-native-remote.json
+!/verification/device-auth-noninteractive.json
+!/verification/authorization-route-result.json
+!/verification/provider-build-result.json
+!/verification/provider-install-preflight.json
 !/verification/native-probe-first.txt
 !/verification/native-probe-context-initialized.txt
 __pycache__/

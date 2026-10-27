@@ -34,5 +34,7 @@
     "CALLBACK transaction=12 status=6 paymentData=false",
     "RESULT activity=0 status=16"
   ],
-  "installed_apk_sha256": "94b8ab31dbeddc2778009dbdc894b1fdc3a156edbdf1b7270ad36e28364de628"
+  "installed_apk_sha256": "94b8ab31dbeddc2778009dbdc894b1fdc3a156edbdf1b7270ad36e28364de628",
+  "phase": "same_process_local_transact",
+  "newer_evidence": "device-native-remote.json"
 }

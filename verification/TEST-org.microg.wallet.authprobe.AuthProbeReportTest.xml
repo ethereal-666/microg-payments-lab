@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.microg.wallet.authprobe.AuthProbeReportTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-27T06:24:00.049Z" hostname="Arch" time="0.928">
+<testsuite name="org.microg.wallet.authprobe.AuthProbeReportTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-27T06:35:30.702Z" hostname="Arch" time="0.98">
   <properties/>
-  <testcase name="wrappedNetworkCauseReportsOnlyItsFixedType" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.865"/>
+  <testcase name="wrappedNetworkCauseReportsOnlyItsFixedType" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.91"/>
   <testcase name="wrappedAuthErrorReportsOnlyAnAllowlistedCode" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.013"/>
-  <testcase name="serverErrorMessagesAreNotCopiedIntoReports" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.009"/>
+  <testcase name="serverErrorMessagesAreNotCopiedIntoReports" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.01"/>
   <testcase name="exceptionMessagesCannotLeakAccountOrTokenData" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.009"/>
-  <testcase name="arbitraryErrorAndKeywordLikeSecretStayPrivate" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.008"/>
+  <testcase name="arbitraryErrorAndKeywordLikeSecretStayPrivate" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.009"/>
   <testcase name="tokenAndAccountNeverEnterTheDiagnostic" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.008"/>
-  <testcase name="emptyTokenDoesNotCountAsAuthorized" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.007"/>
-  <testcase name="actualDeviceRegistrationFailureRetainsOnlyTheErrorCode" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.008"/>
+  <testcase name="emptyTokenDoesNotCountAsAuthorized" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.008"/>
+  <testcase name="actualDeviceRegistrationFailureRetainsOnlyTheErrorCode" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.009"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

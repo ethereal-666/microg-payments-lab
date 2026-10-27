@@ -1,0 +1,20 @@
+{
+  "verified_at_utc": "2026-10-27T06:48:43.997273+00:00",
+  "application_id": "org.microg.wallet.authprobe",
+  "android_oauth_client_registered": true,
+  "package_and_signing_certificate_matched": true,
+  "test_user_added": true,
+  "test_user_matched_phone_account": true,
+  "google_cloud_manual_scope_validation": "rejected_as_invalid",
+  "interactive_request_result": {
+    "event": "io_error",
+    "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+    "token_exposed": false,
+    "payment_attempted": false,
+    "io_hint": "NotOkayException",
+    "auth_error_hint": "INVALID_SCOPE"
+  },
+  "token_acquired": false,
+  "payment_verified": false,
+  "interpretation": "This registered independent client route failed. GmsCore-internal authorization identity and the actual Google TEST buy flow remain untested/unimplemented."
+}

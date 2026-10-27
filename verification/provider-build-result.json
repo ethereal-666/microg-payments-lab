@@ -1,0 +1,13 @@
+{
+  "variant": "vtmHuaweiDebug",
+  "gradle_task": ":play-services-core:assembleVtmHuaweiDebug",
+  "result": "BUILD SUCCESSFUL",
+  "application_id": "com.google.android.gms",
+  "version_code": 252432035,
+  "apk_sha256": "987d5dd0fc6484055fd21dedbe827fabffbea6e1016b5edd4291df7198838b34",
+  "bytes": 107236287,
+  "installed_on_phone": false,
+  "payment_verified": false,
+  "source_patch_sha256": "dcc4f72b183fd9412cca5f42cb422d647a3daede7c794b823d606506cd142386",
+  "signature_verified": true
+}

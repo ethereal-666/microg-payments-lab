@@ -1,7 +1,8 @@
 # microg-payments-lab
 
-面向华为 Android 兼容系统的 **Google Pay 网页付款兼容性实验工程**。
-当前还不能付款，也没有面向普通用户的可安装解决方案。
+面向华为 Android 兼容系统的 **Google Pay 网页付款兼容性实验工程**，Apache-2.0 开源。
+**当前不能付款，不是可用的 Google Pay 解决方案。** 本仓库公开代码和失败证据，便于继续研究。
+最新结论与验收边界见 [STATUS.md](STATUS.md)。
 
 第一阶段研究 Chrome → microG → Google Pay 在线付款，设备基线是 Pura 70、
 HarmonyOS 4.2.0.242 / Android SDK 31。NFC 刷卡和 HarmonyOS NEXT 不属于当前阶段。
@@ -14,8 +15,8 @@ HarmonyOS 4.2.0.242 / Android SDK 31。NFC 刷卡和 HarmonyOS NEXT 不属于当
   检查单向 Binder 调用、错误回调、携带 PendingIntent 的原生界面回调。
 - `wallet-web-core`：实际 OwServiceImpl 的调用方 UID 绑定、请求校验、独立且不可修改的一次性
   PendingIntent，以及 Activity 的过期、错误和取消结果；目前界面只说明付款不可用。
-- `wallet-web-harness`：在独立应用中调用上述实际服务的 transaction 17，接收 callback 12 并打开
-  Activity；不替换手机上的 microG，也不访问账号或网络。
+- `wallet-web-harness`：服务运行在独立 `:wallet` 进程，通过真实 Binder transaction 17 / callback 12
+  打开 Activity。3 项 Pura 70 真机 instrumentation 测试通过；不替换手机 microG，不访问账号或网络。
 - `wallet-auth-probe`：用户主动选择 Google 账号后，通过现有认证器请求 Sierra OAuth 授权；
   只保存授权结果分类，不保存账号名、令牌或服务端错误原文。它不发起付款。
 - `native-port-probe/`：在独立 Android 应用中测试官方钱包类加载与服务初始化。
@@ -24,9 +25,12 @@ HarmonyOS 4.2.0.242 / Android SDK 31。NFC 刷卡和 HarmonyOS NEXT 不属于当
 
 现有服务对有效请求返回 `RESOLUTION_REQUIRED`，Activity 再返回 `API_NOT_CONNECTED` 或取消；
 `isReadyToPay` 仍然返回 false。原生提示页面及错误、取消、系统返回已在 Pura 70 真机验证。
-独立授权探针经用户选择账号后收到 `UNREGISTERED_ON_API_CONSOLE`，没有取得令牌；
-这先暴露了探针自身尚未注册 Android OAuth 客户端的问题，不能推断已注册客户端能否使用 Sierra scope。
-下一步所需配置见 [OAUTH_SETUP.md](OAUTH_SETUP.md)。尚未接入能付款的 Google 后端。
+独立授权探针最初收到 `UNREGISTERED_ON_API_CONSOLE`。注册自有 Android OAuth 客户端、添加测试账号后，
+交互请求返回 `INVALID_SCOPE`，Cloud 控制台也拒绝添加 Sierra scope。没有取得令牌。
+仅注册 OAuth 客户端不足以解决授权，详见 [OAUTH_SETUP.md](OAUTH_SETUP.md)。
+这不能推断以 GmsCore 自身身份运行时的授权结果；该集成路线尚未实机验证。
+完整 Huawei GmsCore APK 已构建，但与手机已安装版本的签名不同，未覆盖安装。
+尚未接入能付款的 Google 后端。
 一次类加载、界面唤起或 OAuth 授权成功都不代表支付已可用。
 
 ## 研究结论
@@ -63,11 +67,20 @@ python tools/bootstrap.py --sdk /absolute/path/to/android-sdk
 python tools/lab.py verify --gmscore GmsCore --java-home /usr/lib/jvm/java-17-openjdk
 python tools/lab.py status
 python tools/lab.py probe-summary verification/native-probe-context-initialized.txt
+# 仅安装独立测试应用及 instrumentation，不替换 com.google.android.gms。
+python tools/device.py native --serial YOUR_AUTHORIZED_DEVICE_SERIAL
+# 仅复测探针已经可见的唯一账号；不自动批准新授权。
+python tools/device.py auth --serial YOUR_AUTHORIZED_DEVICE_SERIAL
 ```
 
 当前验证包括 5 项协议测试、13 项原生交接流程测试、8 项授权诊断测试，以及两个测试 APK 的构建。
 APK 会复制到本地 `artifacts/`，校验值写入 `verification/artifacts.json`；APK 不纳入源码仓库。
 接手机后的步骤见 [DEVICE_TESTS.md](DEVICE_TESTS.md)。
+`device.py` 会检查 instrumentation 的实际完成结果，不能把 ADB 退出码 0 当作测试通过；
+授权观测用例通过也不能当作 OAuth 成功，JSON 会单独记录 `authorization_succeeded`。
+
+完整框架的构建命令为 `./gradlew :play-services-core:assembleVtmHuaweiDebug`（在准备好的 GmsCore 目录中）。
+这仅生成实验框架，不能当作已可支付的发行包，也不保证能保留现有账号直接更新。
 
 脚本会识别已应用的补丁；遇到其他源码改动或不同的上游提交会停止并保留它们。
 本地不需要 Android SDK 的准备流程测试：`python -m unittest discover -s tests -v`。

@@ -584,10 +584,10 @@ index 331ed33..fc7f27c 100644
  include ':firebase-auth'
 diff --git a/wallet-auth-probe/build.gradle b/wallet-auth-probe/build.gradle
 new file mode 100644
-index 0000000..695d0bf
+index 0000000..0025dfc
 --- /dev/null
 +++ b/wallet-auth-probe/build.gradle
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,25 @@
 +/* SPDX-License-Identifier: Apache-2.0 */
 +apply plugin: 'com.android.application'
 +android {
@@ -600,6 +600,7 @@ index 0000000..695d0bf
 +        targetSdkVersion 31
 +        versionCode 1
 +        versionName '0.1-authorization-probe'
++        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
 +    }
 +    compileOptions {
 +        sourceCompatibility = 1.8
@@ -607,8 +608,63 @@ index 0000000..695d0bf
 +    }
 +}
 +dependencies {
++    androidTestImplementation 'androidx.test:runner:1.6.2'
++    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
 +    testImplementation 'junit:junit:4.13.2'
 +    testImplementation 'org.robolectric:robolectric:4.14.1'
++}
+diff --git a/wallet-auth-probe/src/androidTest/java/org/microg/wallet/authprobe/AuthProbeDeviceTest.java b/wallet-auth-probe/src/androidTest/java/org/microg/wallet/authprobe/AuthProbeDeviceTest.java
+new file mode 100644
+index 0000000..5daf081
+--- /dev/null
++++ b/wallet-auth-probe/src/androidTest/java/org/microg/wallet/authprobe/AuthProbeDeviceTest.java
+@@ -0,0 +1,47 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.wallet.authprobe;
++
++import android.os.Bundle;
++import android.app.Instrumentation;
++import android.content.Intent;
++import androidx.test.ext.junit.runners.AndroidJUnit4;
++import androidx.test.platform.app.InstrumentationRegistry;
++import java.io.File;
++import java.io.FileInputStream;
++import java.io.ByteArrayOutputStream;
++import java.nio.charset.StandardCharsets;
++import org.json.JSONObject;
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import static org.junit.Assert.*;
++
++/** Diagnostic observation: a passing test does not mean authorization succeeded. */
++@RunWith(AndroidJUnit4.class)
++public class AuthProbeDeviceTest {
++    @Test public void observePreviouslyVisibleAccountWithoutGrantingNewAccess() throws Exception {
++        File file = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getFilesDir(), "events.jsonl");
++        long before = file.exists() ? file.length() : 0;
++        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
++        AuthProbeActivity activity = (AuthProbeActivity) instrumentation.startActivitySync(
++                new Intent(instrumentation.getTargetContext(), AuthProbeActivity.class)
++                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
++        try {
++            instrumentation.runOnMainSync(activity::retrySingleVisibleAccount);
++            long deadline = android.os.SystemClock.elapsedRealtime() + 45000;
++            while ((!file.exists() || file.length() <= before) && android.os.SystemClock.elapsedRealtime() < deadline) Thread.sleep(100);
++            assertTrue("No diagnostic response within 45 seconds", file.exists() && file.length() > before);
++            byte[] bytes;
++            try (FileInputStream input = new FileInputStream(file); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
++                byte[] buffer = new byte[1024]; int count;
++                while ((count = input.read(buffer)) != -1) out.write(buffer, 0, count);
++                bytes = out.toByteArray();
++            }
++            String[] lines = new String(bytes, StandardCharsets.UTF_8).trim().split("\n");
++            JSONObject result = new JSONObject(lines[lines.length - 1]);
++            assertFalse(result.getBoolean("token_exposed"));
++            assertFalse(result.getBoolean("payment_attempted"));
++            Bundle status = new Bundle(); status.putString("diagnostic", result.toString());
++            InstrumentationRegistry.getInstrumentation().sendStatus(0, status);
++        } finally { instrumentation.runOnMainSync(activity::finish); instrumentation.waitForIdleSync(); }
++    }
 +}
 diff --git a/wallet-auth-probe/src/main/AndroidManifest.xml b/wallet-auth-probe/src/main/AndroidManifest.xml
 new file mode 100644
@@ -629,10 +685,10 @@ index 0000000..b09ebac
 +</manifest>
 diff --git a/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeActivity.java b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeActivity.java
 new file mode 100644
-index 0000000..8d021f9
+index 0000000..6f1dcfc
 --- /dev/null
 +++ b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeActivity.java
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,84 @@
 +/* SPDX-License-Identifier: Apache-2.0 */
 +package org.microg.wallet.authprobe;
 +
@@ -651,6 +707,25 @@ index 0000000..8d021f9
 +public final class AuthProbeActivity extends Activity {
 +    private TextView output;
 +    private Button start;
++
++    /** Reuses only a single account already visible to this app, without UI grants. */
++    void retrySingleVisibleAccount() {
++        start.setEnabled(false);
++        try {
++            AccountManager manager = AccountManager.get(this);
++            Account[] accounts = manager.getAccountsByType("com.google");
++            if (accounts.length != 1) {
++                report(AuthProbeReport.event(accounts.length == 0 ? "no_visible_account" : "multiple_visible_accounts"));
++                return;
++            }
++            // The no-Activity overload returns any required consent Intent; it
++            // never approves new access or starts a consent UI automatically.
++            manager.getAuthToken(accounts[0], AuthProbeReport.SCOPE, new Bundle(), false, future -> {
++                try { report(AuthProbeReport.result(future.getResult())); }
++                catch (Exception exception) { report(AuthProbeReport.failure(exception)); }
++            }, null);
++        } catch (Exception exception) { report(AuthProbeReport.failure(exception)); }
++    }
 +
 +    @Override public void onCreate(Bundle state) {
 +        super.onCreate(state);
@@ -1478,10 +1553,10 @@ index 0000000..7d1a8db
 +}
 diff --git a/wallet-web-harness/build.gradle b/wallet-web-harness/build.gradle
 new file mode 100644
-index 0000000..ad9acf7
+index 0000000..3e8e6f7
 --- /dev/null
 +++ b/wallet-web-harness/build.gradle
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,26 @@
 +/* SPDX-License-Identifier: Apache-2.0 */
 +apply plugin: 'com.android.application'
 +
@@ -1495,22 +1570,131 @@ index 0000000..ad9acf7
 +        targetSdkVersion 31
 +        versionCode 1
 +        versionName '0.1-protocol-only'
++        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
 +    }
 +    compileOptions {
 +        sourceCompatibility = 1.8
 +        targetCompatibility = 1.8
 +    }
 +}
-+dependencies { implementation project(':wallet-web-core') }
++dependencies {
++    implementation project(':wallet-web-core')
++    androidTestImplementation 'androidx.test:runner:1.6.2'
++    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
++    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
++}
+diff --git a/wallet-web-harness/src/androidTest/java/org/microg/wallet/lab/RemoteFlowTest.java b/wallet-web-harness/src/androidTest/java/org/microg/wallet/lab/RemoteFlowTest.java
+new file mode 100644
+index 0000000..920ce33
+--- /dev/null
++++ b/wallet-web-harness/src/androidTest/java/org/microg/wallet/lab/RemoteFlowTest.java
+@@ -0,0 +1,95 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.wallet.lab;
++
++import android.content.Context;
++import android.app.Instrumentation;
++import android.app.Activity;
++import android.content.Intent;
++import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
++import androidx.test.runner.lifecycle.Stage;
++import androidx.test.ext.junit.runners.AndroidJUnit4;
++import androidx.test.platform.app.InstrumentationRegistry;
++import java.io.File;
++import java.io.FileInputStream;
++import java.io.ByteArrayOutputStream;
++import java.nio.charset.StandardCharsets;
++import org.microg.gms.wallet.web.R;
++import org.junit.Before;
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import static androidx.test.espresso.Espresso.*;
++import static androidx.test.espresso.action.ViewActions.click;
++import static androidx.test.espresso.assertion.ViewAssertions.*;
++import static androidx.test.espresso.matcher.ViewMatchers.*;
++import static org.junit.Assert.*;
++
++/** Actual device IPC and UI lifecycle, without accounts or network requests. */
++@RunWith(AndroidJUnit4.class)
++public class RemoteFlowTest {
++    private File events;
++
++    @Before public void clearOnlyOurTestEvents() {
++        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
++        events = new File(context.getFilesDir(), "events.txt");
++        assertTrue(!events.exists() || events.delete());
++    }
++
++    private String trace() throws Exception {
++        if (!events.exists()) return "";
++        try (FileInputStream input = new FileInputStream(events); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
++            byte[] buffer = new byte[1024]; int count;
++            while ((count = input.read(buffer)) != -1) out.write(buffer, 0, count);
++            return new String(out.toByteArray(), StandardCharsets.UTF_8);
++        }
++    }
++
++    private void await(String marker) throws Exception {
++        long deadline = android.os.SystemClock.elapsedRealtime() + 15000;
++        while (!trace().contains(marker) && android.os.SystemClock.elapsedRealtime() < deadline) Thread.sleep(50);
++        assertTrue(trace(), trace().contains(marker));
++    }
++
++    private void checkFlow(int action, String expected) throws Exception {
++        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
++        Instrumentation.ActivityMonitor monitor = instrumentation.addMonitor("org.microg.gms.wallet.web.WebPaymentActivity", null, false);
++        // Use the platform launcher directly: ActivityScenario's helper EmptyActivity
++        // can retain foreground focus on this Huawei firmware between test runs.
++        instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(), HarnessActivity.class)
++                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
++        instrumentation.waitForIdleSync();
++        try {
++            onView(withText("Test native UI and return flow")).perform(click());
++            await("CALLBACK transaction=12 status=6 paymentData=false remote=true");
++            assertNotNull("Payment Activity did not resume", instrumentation.waitForMonitorWithTimeout(monitor, 15000));
++            instrumentation.waitForIdleSync();
++            onView(withText(R.string.wallet_web_unavailable_title)).check(matches(isDisplayed()));
++            if (action == 0) pressBack();
++            else onView(withText(action)).perform(click());
++            await(expected);
++            String log = trace();
++            assertTrue(log, log.contains("TRANSPORT remote=true"));
++            assertFalse(log, log.contains("UNEXPECTED_OK"));
++            assertFalse(log, log.contains("FAILED"));
++        } finally {
++            instrumentation.removeMonitor(monitor);
++            instrumentation.runOnMainSync(() -> {
++                for (Stage stage : new Stage[]{Stage.RESUMED, Stage.STARTED, Stage.CREATED, Stage.PAUSED, Stage.STOPPED}) {
++                    for (Activity activity : new java.util.ArrayList<>(ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(stage))) {
++                        if (activity.getPackageName().equals("org.microg.wallet.lab")) activity.finish();
++                    }
++                }
++            });
++            instrumentation.waitForIdleSync();
++        }
++    }
++
++    @Test public void errorResultCrossesTheProcessBoundary() throws Exception {
++        checkFlow(R.string.wallet_web_return, "RESULT activity=1 status=17");
++    }
++    @Test public void cancellationCrossesTheProcessBoundary() throws Exception {
++        checkFlow(R.string.wallet_web_cancel, "RESULT activity=0 status=16");
++    }
++    @Test public void systemBackCrossesTheProcessBoundary() throws Exception {
++        checkFlow(0, "RESULT activity=0 status=16");
++    }
++}
 diff --git a/wallet-web-harness/src/main/AndroidManifest.xml b/wallet-web-harness/src/main/AndroidManifest.xml
 new file mode 100644
-index 0000000..dc1676b
+index 0000000..d52ae08
 --- /dev/null
 +++ b/wallet-web-harness/src/main/AndroidManifest.xml
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,13 @@
 +<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 +    <application android:label="Wallet flow lab" android:allowBackup="false"
 +        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
++        <service android:name=".HarnessWalletService" android:exported="false"
++            android:process=":wallet" />
 +        <activity android:name="org.microg.wallet.lab.HarnessActivity" android:exported="true">
 +            <intent-filter>
 +                <action android:name="android.intent.action.MAIN" />
@@ -1521,33 +1705,30 @@ index 0000000..dc1676b
 +</manifest>
 diff --git a/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessActivity.java b/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessActivity.java
 new file mode 100644
-index 0000000..c99cd98
+index 0000000..5d4c03a
 --- /dev/null
 +++ b/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessActivity.java
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,127 @@
 +/* SPDX-License-Identifier: Apache-2.0 */
 +package org.microg.wallet.lab;
 +
 +import android.app.Activity;
 +import android.content.Intent;
++import android.content.ComponentName;
++import android.content.ServiceConnection;
++import android.os.Binder;
 +import android.os.Bundle;
 +import android.os.IBinder;
 +import android.os.Parcel;
 +import android.os.Process;
-+import android.os.RemoteException;
 +import android.widget.Button;
 +import android.widget.LinearLayout;
 +import android.widget.TextView;
 +import com.google.android.gms.common.api.CommonStatusCodes;
 +import com.google.android.gms.common.api.Status;
-+import com.google.android.gms.wallet.GetClientTokenRequest;
 +import com.google.android.gms.wallet.GetClientTokenResponse;
-+import com.google.android.gms.wallet.IsReadyToPayRequest;
 +import com.google.android.gms.wallet.WebPaymentData;
-+import com.google.android.gms.wallet.WebPaymentDataRequest;
-+import com.google.android.gms.wallet.internal.IOwService;
 +import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
-+import org.microg.gms.wallet.OwServiceImpl;
 +import org.microg.gms.wallet.web.WebPaymentResults;
 +import java.io.FileOutputStream;
 +import java.nio.charset.StandardCharsets;
@@ -1555,6 +1736,18 @@ index 0000000..c99cd98
 +/** Exercises the real bridge through Binder 17 without touching installed GMS. */
 +public final class HarnessActivity extends Activity {
 +    private TextView output;
++    private Button start;
++    private boolean bound;
++    private final ServiceConnection connection = new ServiceConnection() {
++        @Override public void onServiceConnected(ComponentName name, IBinder service) {
++            event("TRANSPORT remote=" + (service.queryLocalInterface("com.google.android.gms.wallet.internal.IOwService") == null));
++            sendRequest(service);
++        }
++        @Override public void onServiceDisconnected(ComponentName name) {
++            event("SERVICE_DISCONNECTED");
++            start.setEnabled(true);
++        }
++    };
 +    private String text = "This is an offline protocol test. No Google account or network access is requested.\n";
 +
 +    @Override public void onCreate(Bundle state) {
@@ -1565,8 +1758,8 @@ index 0000000..c99cd98
 +        int padding = (int) (20 * getResources().getDisplayMetrics().density);
 +        layout.setPadding(padding, padding, padding, padding);
 +        output = new TextView(this); output.setText(text); layout.addView(output);
-+        Button button = new Button(this); button.setText("Test native UI and return flow");
-+        button.setOnClickListener(view -> runTest()); layout.addView(button);
++        start = new Button(this); start.setText("Test native UI and return flow");
++        start.setOnClickListener(view -> runTest()); layout.addView(start);
 +        setContentView(layout);
 +    }
 +
@@ -1583,16 +1776,26 @@ index 0000000..c99cd98
 +    }
 +
 +    private void runTest() {
-+        IOwService.Stub service = new OwServiceImpl(this, Process.myUid(), getPackageName());
++        if (bound) { unbindService(connection); bound = false; }
++        start.setEnabled(false);
++        bound = bindService(new Intent(this, HarnessWalletService.class), connection, BIND_AUTO_CREATE);
++        if (!bound) { event("BIND_FAILED"); start.setEnabled(true); }
++    }
++
++    private void sendRequest(IBinder service) {
 +        IWalletServiceCallbacks callback = new IWalletServiceCallbacks.Stub() {
 +            @Override public void onIsReadyToPayResponse(Status s, boolean r, Bundle b) {}
 +            @Override public void onClientTokenReceived(Status s, GetClientTokenResponse r, Bundle b) {}
 +            @Override public void onWebPaymentDataLoaded(Status status, WebPaymentData data, Bundle extras) {
-+                event("CALLBACK transaction=12 status=" + status.getStatusCode() + " paymentData=" + (data != null));
-+                if (status.getStatusCode() == CommonStatusCodes.RESOLUTION_REQUIRED && status.hasResolution()) {
-+                    try { startIntentSenderForResult(status.getResolution().getIntentSender(), 17, null, 0, 0, 0); }
-+                    catch (Exception exception) { event("LAUNCH_FAILED " + exception.getClass().getSimpleName()); }
-+                }
++                boolean remoteCaller = Binder.getCallingPid() != Process.myPid();
++                runOnUiThread(() -> {
++                    if (isDestroyed()) return;
++                    event("CALLBACK transaction=12 status=" + status.getStatusCode() + " paymentData=" + (data != null) + " remote=" + remoteCaller);
++                    if (status.getStatusCode() == CommonStatusCodes.RESOLUTION_REQUIRED && status.hasResolution()) {
++                        try { startIntentSenderForResult(status.getResolution().getIntentSender(), 17, null, 0, 0, 0); }
++                        catch (Exception exception) { event("LAUNCH_FAILED " + exception.getClass().getSimpleName()); start.setEnabled(true); }
++                    } else start.setEnabled(true);
++                });
 +            }
 +        };
 +        Parcel request = Parcel.obtain();
@@ -1606,8 +1809,10 @@ index 0000000..c99cd98
 +            request.writeInt(1); new Bundle().writeToParcel(request, 0);
 +            request.writeStrongBinder(callback.asBinder());
 +            event("REQUEST transaction=17");
-+            service.transact(17, request, null, IBinder.FLAG_ONEWAY);
-+        } catch (Exception exception) { event("REQUEST_FAILED " + exception.getClass().getSimpleName()); }
++            if (!service.transact(17, request, null, IBinder.FLAG_ONEWAY)) {
++                event("TRANSACTION_UNSUPPORTED"); start.setEnabled(true);
++            }
++        } catch (Exception exception) { event("REQUEST_FAILED " + exception.getClass().getSimpleName()); start.setEnabled(true); }
 +        finally { request.recycle(); }
 +    }
 +
@@ -1620,8 +1825,37 @@ index 0000000..c99cd98
 +    @Override protected void onActivityResult(int request, int result, Intent data) {
 +        super.onActivityResult(request, result, data);
 +        if (request != 17) return;
++        start.setEnabled(true);
 +        Status status = data == null ? null : data.getParcelableExtra(WebPaymentResults.STATUS);
 +        event("RESULT activity=" + result + " status=" + (status == null ? "none" : status.getStatusCode()));
 +        if (result == RESULT_OK) event("UNEXPECTED_OK: no backend should return success");
++    }
++
++    @Override protected void onDestroy() {
++        if (bound) { unbindService(connection); bound = false; }
++        super.onDestroy();
++    }
++}
+diff --git a/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessWalletService.java b/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessWalletService.java
+new file mode 100644
+index 0000000..c684b21
+--- /dev/null
++++ b/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessWalletService.java
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.wallet.lab;
++
++import android.app.Service;
++import android.content.Intent;
++import android.os.IBinder;
++import android.os.Process;
++import org.microg.gms.wallet.OwServiceImpl;
++
++/** Separate-process instance of the production wallet implementation. */
++public final class HarnessWalletService extends Service {
++    @Override public IBinder onBind(Intent intent) {
++        // This non-exported service is reachable only by this lab application's
++        // UID. Production PaymentService binds the UID after broker validation.
++        return new OwServiceImpl(this, Process.myUid(), getPackageName());
 +    }
 +}

@@ -1,0 +1,14 @@
+microg-payments-lab
+
+Experimental Web Payments compatibility work based on microG GmsCore.
+Upstream: https://github.com/microg/GmsCore
+Baseline: v0.3.17.252432 (32bc8954ff872d0e1a05ddfae81561b6dbecef69)
+Upstream source license: Apache License 2.0.
+
+The cumulative patch retains upstream copyright and license notices.
+Changes add WebPaymentData protocol models, UID-bound native resolution handling,
+isolated diagnostic apps, and tests. New project code is licensed under Apache-2.0.
+
+Google APKs, decompiled implementations, signing keys, account data and credentials
+are not distributed by this repository. Runtime dependencies retain their own
+licenses. No affiliation with or endorsement by Google, Huawei or microG is implied.

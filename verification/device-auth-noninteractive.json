@@ -1,0 +1,19 @@
+{
+  "instrumentation_tests": 1,
+  "observation_completed": true,
+  "payment_verified": false,
+  "authorization_succeeded": false,
+  "diagnostic": {
+    "event": "io_error",
+    "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+    "token_exposed": false,
+    "payment_attempted": false,
+    "io_hint": "NotOkayException",
+    "auth_error_hint": "INVALID_SCOPE"
+  },
+  "verified_at_utc": "2026-10-27T06:55:53.337001+00:00",
+  "app_package": "org.microg.wallet.authprobe",
+  "installed_app_sha256": "10a429973484919bd0614b4e55d88a457338987ac6a405e88c77828f28337fdb",
+  "installed_test_sha256": "35ade371859bafa105b559fb35dfb0758866e76fb1250bd91915cc9a8f9804be",
+  "scope": "Only the single account already visible to the probe; no new grant approved and no UI automated"
+}

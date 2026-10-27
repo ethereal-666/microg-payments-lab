@@ -1,6 +1,6 @@
 {
   "name": "microg-payments-lab",
-  "status": "experimental_native_handoff",
+  "status": "research_prototype_payment_unavailable",
   "payment_working": false,
   "scope": "Chrome online Google Pay on Android-compatible Huawei firmware",
   "device_baseline": {
@@ -15,7 +15,7 @@
     "commit": "32bc8954ff872d0e1a05ddfae81561b6dbecef69"
   },
   "protocol_reference": "Google Wallet SDK 20.0.0",
-  "next_gate": "Register own Android OAuth client for org.microg.wallet.authprobe and its signing certificate; retry Sierra scope authorization before Google TEST payment initialization",
+  "next_gate": "Evaluate GmsCore-internal authorization on a recoverable test environment, then implement and verify the actual Google TEST web buy flow; independent client registration is not a sufficient fix",
   "not_implemented": [
     "Google-backed web payment initialization and token acquisition",
     "Production payment UI and authorization",
@@ -30,7 +30,7 @@
     "skipped": 0,
     "scope": "ABI and callback round trips only; no on-device payment verification"
   },
-  "device_validation": "isolated_native_handoff_passed; auth_probe_blocked_by_unregistered_own_oauth_client",
+  "device_validation": "remote_native_handoff_passed; registered_independent_oauth_client_rejected_with_INVALID_SCOPE",
   "native_flow_tests": {
     "tests": 13,
     "failures": 0,
@@ -41,7 +41,7 @@
     "tests": 8,
     "failures": 0,
     "errors": 0,
-    "scope": "Allowlisted diagnostic redaction and wrapped auth/transport errors; device returned UNREGISTERED_ON_API_CONSOLE without a token"
+    "scope": "Allowlisted redaction tests; registered independent client observed INVALID_SCOPE; no token acquired"
   },
   "bootstrap_tests": {
     "tests": 4,
@@ -53,6 +53,22 @@
   ],
   "device_evidence": {
     "native_flow": "verification/device-native-flow.json",
-    "authorization": "verification/device-auth-probe.json"
+    "authorization": "verification/device-auth-probe.json",
+    "remote_native_flow": "verification/device-native-remote.json",
+    "registered_client_authorization": "verification/authorization-route-result.json",
+    "noninteractive_auth": "verification/device-auth-noninteractive.json",
+    "provider_build": "verification/provider-build-result.json",
+    "provider_install_preflight": "verification/provider-install-preflight.json"
+  },
+  "device_instrumentation": {
+    "native_tests": 3,
+    "native_failures": 0,
+    "auth_observation_tests": 1,
+    "authorization_succeeded": false,
+    "payment_verified": false
+  },
+  "host_tests": {
+    "tests": 9,
+    "failures": 0
   }
 }

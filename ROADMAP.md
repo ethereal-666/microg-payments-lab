@@ -10,9 +10,11 @@
 
 ## P1：确定能取得真实测试支付数据的后端路线
 
-这是项目的首要可行性关口，尚未实现。独立 Sierra OAuth 授权探针已在手机运行，用户主动选择账号后收到
-`UNREGISTERED_ON_API_CONSOLE`，没有取得令牌。先为探针自己的包名/签名注册 Android OAuth 客户端，
-再重试并确定 Sierra scope 的客户端资格；配置资料见 OAUTH_SETUP.md。注册或取得令牌都不等于支付初始化可行。
+这是项目的首要可行性关口，尚未实现。独立 Sierra OAuth 授权探针在注册客户端前返回
+`UNREGISTERED_ON_API_CONSOLE`，注册并添加测试用户后返回 `INVALID_SCOPE`；控制台也拒绝该 scope。
+该独立伴随应用路线未能取得令牌。不要继续把客户端注册当作唯一阻碍。
+下一步应在可恢复的框架测试环境核对 GmsCore 内部调用身份与网页买单流程；本机框架签名不同，
+没有覆盖安装。不能把伴随应用结果推广为所有 GmsCore 身份下的授权结论。
 
 1. 对照原生 `grae` / `gqxm` 的初始化、账号资格与结果处理流程，明确所需请求和响应结构。
 2. 核对 microG 的 Bender3 / PurchaseManager 与网页付款的协议交集。

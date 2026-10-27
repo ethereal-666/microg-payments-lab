@@ -41,5 +41,7 @@
       "auth_error_hint": "UNREGISTERED_ON_API_CONSOLE"
     }
   ],
-  "installed_apk_sha256": "22558684599f5775ca1af1a80f4bc2054ea34cd89e64eb2f775328deb8bc3a10"
+  "installed_apk_sha256": "22558684599f5775ca1af1a80f4bc2054ea34cd89e64eb2f775328deb8bc3a10",
+  "phase": "initial_unregistered_client_observation",
+  "newer_evidence": "authorization-route-result.json"
 }

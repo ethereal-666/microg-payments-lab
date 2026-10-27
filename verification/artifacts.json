@@ -2,13 +2,13 @@
   {
     "path": "artifacts/wallet-web-harness-debug.apk",
     "application_id": "org.microg.wallet.lab",
-    "sha256": "94b8ab31dbeddc2778009dbdc894b1fdc3a156edbdf1b7270ad36e28364de628",
+    "sha256": "f30eb7a6e48d5e872820e8d486c2d813cbe3640830a21b7d85694251b4f8de35",
     "bytes": 2334005
   },
   {
     "path": "artifacts/wallet-auth-probe-debug.apk",
     "application_id": "org.microg.wallet.authprobe",
-    "sha256": "22558684599f5775ca1af1a80f4bc2054ea34cd89e64eb2f775328deb8bc3a10",
-    "bytes": 16955
+    "sha256": "10a429973484919bd0614b4e55d88a457338987ac6a405e88c77828f28337fdb",
+    "bytes": 15335
   }
 ]

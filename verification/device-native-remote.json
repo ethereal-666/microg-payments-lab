@@ -1,0 +1,24 @@
+{
+  "instrumentation_tests": 3,
+  "observation_completed": true,
+  "payment_verified": false,
+  "verified_at_utc": "2026-10-27T06:55:47.603091+00:00",
+  "app_package": "org.microg.wallet.lab",
+  "installed_app_sha256": "f30eb7a6e48d5e872820e8d486c2d813cbe3640830a21b7d85694251b4f8de35",
+  "installed_test_sha256": "34bfaa988dcaecbe6ccd0bd39ece2a1205b0a64b00ae5754a96dd32cd672beaf",
+  "scope": "Separate-process OwServiceImpl Binder 17, callback 12 and native error/cancel/back Activity results; no Google backend",
+  "cases": {
+    "error_return": {
+      "activity_result": 1,
+      "status": 17
+    },
+    "cancel_button": {
+      "activity_result": 0,
+      "status": 16
+    },
+    "system_back": {
+      "activity_result": 0,
+      "status": 16
+    }
+  }
+}

@@ -57,7 +57,8 @@ def verify(checkout, java_home):
                ":play-services-api:testDebugUnitTest", "--tests",
                "org.microg.gms.wallet.WebPaymentWireTest",
                ":wallet-web-core:testDebugUnitTest", ":wallet-auth-probe:testDebugUnitTest",
-               ":wallet-web-harness:assembleDebug", ":wallet-auth-probe:assembleDebug"]
+               ":wallet-web-harness:assembleDebug", ":wallet-auth-probe:assembleDebug",
+               ":wallet-web-harness:assembleDebugAndroidTest", ":wallet-auth-probe:assembleDebugAndroidTest"]
     subprocess.run(command, cwd=checkout, env=env, check=True)
     target = ROOT / "verification"
     target.mkdir(exist_ok=True)

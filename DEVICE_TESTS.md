@@ -10,8 +10,32 @@ Pura 70 / Android API 31 已安装两个测试应用。原生实验页面能打�
 
 用户自行选择 Google 账号后，授权探针收到 `io_error`。补充固定错误标识诊断后重试，确认是
 `NotOkayException` / `UNREGISTERED_ON_API_CONSOLE`，没有取得令牌，也没有发起付款。
-证据为 `verification/device-auth-probe.json`。下一步先完成 OAUTH_SETUP.md 中的自有客户端注册。
-该结果不能判定注册后能否取得 Sierra 授权，更不能判定付款后端是否可用。
+初始证据为 `verification/device-auth-probe.json`。
+
+后续已创建自有 Android OAuth 客户端并添加同一账号为测试用户；交互授权返回 `INVALID_SCOPE`，
+Cloud 控制台也拒绝 Sierra scope。后续证据见 `verification/authorization-route-result.json`。
+注册客户端没有解决本路线的问题；尚未测试集成到 GmsCore 身份内时的授权情况。
+
+最初 harness 在应用进程内本地 transact。升级后的服务位于 `:wallet` 独立进程，
+3 项 instrumentation 已验证真实 IPC、PendingIntent 和页面返回；新证据是 `verification/device-native-remote.json`。
+不要把旧的本地 transact 记录标为跨进程测试。
+
+## 无需人工点击的复现
+
+先运行 README 中的 `tools/lab.py verify` 构建应用与 Android 测试 APK，然后：
+
+```bash
+python tools/device.py native --serial SERIAL
+python tools/device.py auth --serial SERIAL
+```
+
+第二条只尝试探针已经可见的唯一账号，不选择多个账号、不批准新的授权，也不输出账号标识。
+结果分开记录“观测用例完成”和“OAuth 是否成功”；需要交互时返回 `interactive_authorization_required`。
+交互授权的错误结果应与该非交互观测分别保存。
+
+本机发现 ActivityScenario 的 EmptyActivity 偶尔会占据前台，导致 Espresso 无法获得窗口焦点。
+测试改用平台 Instrumentation 直接启动；每轮只停止测试应用及其 runner，清理自己创建的 Activity。
+设备报告包含实际安装的应用/测试 APK 校验值，旧版本报告不能直接用于新版 APK。
 
 先用 `adb devices` 确认用户连接并授权的手机，再将下面的 `SERIAL` 替换成该设备序列号。
 

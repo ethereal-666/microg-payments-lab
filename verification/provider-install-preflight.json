@@ -1,0 +1,7 @@
+{
+  "installed_microg_certificate_sha256": "9bd06727e62796c0130eb6dab39b73157451582cbd138e86c468acc395d14165",
+  "lab_build_certificate_sha256": "b1e9cc1ae7bb66d51215255ef36fc3d3c9ea5e3dbdcff16568f21ee8ec1dbc21",
+  "same_certificate": false,
+  "provider_replaced": false,
+  "interpretation": "Different signing certificates prevent an ordinary in-place APK update; uninstalling the authenticator can lose account state."
+}
