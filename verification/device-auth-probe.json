@@ -1,0 +1,45 @@
+{
+  "verified_at_utc": "2026-10-27T06:23:13.547221+00:00",
+  "test_app": "org.microg.wallet.authprobe",
+  "user_initiated": true,
+  "latest_result": {
+    "event": "io_error",
+    "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+    "token_exposed": false,
+    "payment_attempted": false,
+    "io_hint": "NotOkayException",
+    "auth_error_hint": "UNREGISTERED_ON_API_CONSOLE"
+  },
+  "token_acquired": false,
+  "payment_verified": false,
+  "interpretation": "Own test Android OAuth client is unregistered; this result does not establish whether the Sierra scope or a registered microG provider client can obtain authorization.",
+  "events": [
+    {
+      "event": "io_error",
+      "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+      "token_exposed": false,
+      "payment_attempted": false
+    },
+    {
+      "event": "io_error",
+      "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+      "token_exposed": false,
+      "payment_attempted": false
+    },
+    {
+      "event": "io_error",
+      "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+      "token_exposed": false,
+      "payment_attempted": false
+    },
+    {
+      "event": "io_error",
+      "scope": "oauth2:https://www.googleapis.com/auth/sierra",
+      "token_exposed": false,
+      "payment_attempted": false,
+      "io_hint": "NotOkayException",
+      "auth_error_hint": "UNREGISTERED_ON_API_CONSOLE"
+    }
+  ],
+  "installed_apk_sha256": "22558684599f5775ca1af1a80f4bc2054ea34cd89e64eb2f775328deb8bc3a10"
+}

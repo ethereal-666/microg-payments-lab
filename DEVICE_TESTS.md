@@ -2,6 +2,17 @@
 
 两个测试应用使用独立包名，不替换 `com.google.android.gms`。当前没有可付款的生产 APK。
 
+## 2026-10-27 真机结果
+
+Pura 70 / Android API 31 已安装两个测试应用。原生实验页面能打开，transaction 17 → callback 12 / Status 6
+之后，返回按钮得到 Activity 1 / Status 17，取消按钮和系统返回键得到 Activity 0 / Status 16。
+三条路径均无付款数据或成功结果。证据为 `verification/device-native-flow.json`。
+
+用户自行选择 Google 账号后，授权探针收到 `io_error`。补充固定错误标识诊断后重试，确认是
+`NotOkayException` / `UNREGISTERED_ON_API_CONSOLE`，没有取得令牌，也没有发起付款。
+证据为 `verification/device-auth-probe.json`。下一步先完成 OAUTH_SETUP.md 中的自有客户端注册。
+该结果不能判定注册后能否取得 Sierra 授权，更不能判定付款后端是否可用。
+
 先用 `adb devices` 确认用户连接并授权的手机，再将下面的 `SERIAL` 替换成该设备序列号。
 
 ## 原生唤起与返回
@@ -42,6 +53,8 @@ adb -s SERIAL shell am start -n org.microg.wallet.authprobe/.AuthProbeActivity
 
 - `token_acquired`：该测试应用取得了此 scope 的令牌；仅说明授权这一步成功。
 - `access_denied` / `authenticator_error`：认证权限或认证器拒绝；保留分类和错误码继续定位。
+- `io_error`：认证器将失败包装为 I/O 错误，不一定是网络断开；若包含 `io_hint` 或
+  `auth_error_hint`，它们只包含固定白名单标识，不包含原始异常或任意服务端文字。
 - `interactive_authorization_required`：认证器仍返回交互需求，尚不能当作成功。
 - `cancelled` / `no_token`：未取得令牌。
 

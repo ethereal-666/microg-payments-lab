@@ -64,7 +64,7 @@ def verify(checkout, java_home):
     summaries = {}
     suites = [("protocol", "play-services-api", "org.microg.gms.wallet.WebPaymentWireTest", 5),
               ("native_flow", "wallet-web-core", "org.microg.gms.wallet.web.WebPaymentBridgeTest", 13),
-              ("auth_diagnostics", "wallet-auth-probe", "org.microg.wallet.authprobe.AuthProbeReportTest", 4)]
+              ("auth_diagnostics", "wallet-auth-probe", "org.microg.wallet.authprobe.AuthProbeReportTest", 8)]
     for name, module, test_class, minimum in suites:
         report = checkout / module / "build/test-results/testDebugUnitTest" / ("TEST-" + test_class + ".xml")
         suite = ET.parse(report).getroot()
@@ -89,7 +89,7 @@ def verify(checkout, java_home):
                           "bytes": destination.stat().st_size})
     (target / "artifacts.json").write_text(json.dumps(artifacts, indent=2) + "\n")
     result = {"suites": summaries, "total_tests": sum(int(x["tests"]) for x in summaries.values()),
-              "payment_verified": False, "scope": "Unit tests and APK builds; phone verification pending"}
+              "payment_verified": False, "scope": "Unit tests and APK builds; device evidence is recorded separately"}
     (target / "native-flow-result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 

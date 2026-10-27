@@ -1,0 +1,38 @@
+{
+  "verified_at_utc": "2026-10-27T06:19:49.111323+00:00",
+  "model": "Huawei Pura 70 ADY-AL00",
+  "android_api": 31,
+  "test_app": "org.microg.wallet.lab",
+  "scope": "isolated native Binder dispatch and Activity resolution; not Chrome or Google payment backend",
+  "cases": {
+    "error_return": {
+      "activity_result": 1,
+      "status": 17
+    },
+    "cancel_button": {
+      "activity_result": 0,
+      "status": 16
+    },
+    "system_back": {
+      "activity_result": 0,
+      "status": 16
+    }
+  },
+  "request_transaction": 17,
+  "callback_transaction": 12,
+  "resolution_status": 6,
+  "payment_data_returned": false,
+  "payment_verified": false,
+  "events": [
+    "REQUEST transaction=17",
+    "CALLBACK transaction=12 status=6 paymentData=false",
+    "RESULT activity=1 status=17",
+    "REQUEST transaction=17",
+    "CALLBACK transaction=12 status=6 paymentData=false",
+    "RESULT activity=0 status=16",
+    "REQUEST transaction=17",
+    "CALLBACK transaction=12 status=6 paymentData=false",
+    "RESULT activity=0 status=16"
+  ],
+  "installed_apk_sha256": "94b8ab31dbeddc2778009dbdc894b1fdc3a156edbdf1b7270ad36e28364de628"
+}

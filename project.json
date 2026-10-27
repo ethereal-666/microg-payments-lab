@@ -15,7 +15,7 @@
     "commit": "32bc8954ff872d0e1a05ddfae81561b6dbecef69"
   },
   "protocol_reference": "Google Wallet SDK 20.0.0",
-  "next_gate": "On-device native error/cancel handoff and user-initiated Sierra OAuth scope probe; Google TEST payment initialization remains unimplemented",
+  "next_gate": "Register own Android OAuth client for org.microg.wallet.authprobe and its signing certificate; retry Sierra scope authorization before Google TEST payment initialization",
   "not_implemented": [
     "Google-backed web payment initialization and token acquisition",
     "Production payment UI and authorization",
@@ -30,7 +30,7 @@
     "skipped": 0,
     "scope": "ABI and callback round trips only; no on-device payment verification"
   },
-  "device_validation": "pending",
+  "device_validation": "isolated_native_handoff_passed; auth_probe_blocked_by_unregistered_own_oauth_client",
   "native_flow_tests": {
     "tests": 13,
     "failures": 0,
@@ -38,10 +38,10 @@
     "scope": "Actual OwServiceImpl Binder dispatch and Android Activity error/cancel lifecycle under Robolectric"
   },
   "auth_diagnostic_tests": {
-    "tests": 4,
+    "tests": 8,
     "failures": 0,
     "errors": 0,
-    "scope": "Diagnostic redaction only; real OAuth authorization has not been tested"
+    "scope": "Allowlisted diagnostic redaction and wrapped auth/transport errors; device returned UNREGISTERED_ON_API_CONSOLE without a token"
   },
   "bootstrap_tests": {
     "tests": 4,
@@ -50,5 +50,9 @@
   "test_apps": [
     "org.microg.wallet.lab",
     "org.microg.wallet.authprobe"
-  ]
+  ],
+  "device_evidence": {
+    "native_flow": "verification/device-native-flow.json",
+    "authorization": "verification/device-auth-probe.json"
+  }
 }

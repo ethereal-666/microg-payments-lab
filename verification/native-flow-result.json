@@ -18,14 +18,14 @@
     },
     "auth_diagnostics": {
       "name": "org.microg.wallet.authprobe.AuthProbeReportTest",
-      "tests": "4",
+      "tests": "8",
       "failures": "0",
       "errors": "0",
       "skipped": "0",
-      "time": "0.918"
+      "time": "0.928"
     }
   },
-  "total_tests": 22,
+  "total_tests": 26,
   "payment_verified": false,
-  "scope": "Unit tests and APK builds; phone verification pending"
+  "scope": "Unit tests and APK builds; device evidence is recorded separately"
 }

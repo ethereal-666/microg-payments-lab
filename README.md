@@ -23,8 +23,11 @@ HarmonyOS 4.2.0.242 / Android SDK 31。NFC 刷卡和 HarmonyOS NEXT 不属于当
 - `research/` 保存本轮公开资料检索结果；`verification/` 保存脱离付款数据的实验结果。
 
 现有服务对有效请求返回 `RESOLUTION_REQUIRED`，Activity 再返回 `API_NOT_CONNECTED` 或取消；
-`isReadyToPay` 仍然返回 false。原生服务、界面和返回已通过单元测试，尚未在手机验证，
-也没有接入能付款的 Google 后端。一次类加载、界面唤起或 OAuth 授权成功都不代表支付已可用。
+`isReadyToPay` 仍然返回 false。原生提示页面及错误、取消、系统返回已在 Pura 70 真机验证。
+独立授权探针经用户选择账号后收到 `UNREGISTERED_ON_API_CONSOLE`，没有取得令牌；
+这先暴露了探针自身尚未注册 Android OAuth 客户端的问题，不能推断已注册客户端能否使用 Sierra scope。
+下一步所需配置见 [OAUTH_SETUP.md](OAUTH_SETUP.md)。尚未接入能付款的 Google 后端。
+一次类加载、界面唤起或 OAuth 授权成功都不代表支付已可用。
 
 ## 研究结论
 
@@ -62,7 +65,7 @@ python tools/lab.py status
 python tools/lab.py probe-summary verification/native-probe-context-initialized.txt
 ```
 
-当前验证包括 5 项协议测试、13 项原生交接流程测试、4 项授权诊断测试，以及两个测试 APK 的构建。
+当前验证包括 5 项协议测试、13 项原生交接流程测试、8 项授权诊断测试，以及两个测试 APK 的构建。
 APK 会复制到本地 `artifacts/`，校验值写入 `verification/artifacts.json`；APK 不纳入源码仓库。
 接手机后的步骤见 [DEVICE_TESTS.md](DEVICE_TESTS.md)。
 

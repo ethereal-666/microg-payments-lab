@@ -700,10 +700,10 @@ index 0000000..8d021f9
 +}
 diff --git a/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeReport.java b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeReport.java
 new file mode 100644
-index 0000000..071e82c
+index 0000000..082a5db
 --- /dev/null
 +++ b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeReport.java
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,68 @@
 +/* SPDX-License-Identifier: Apache-2.0 */
 +package org.microg.wallet.authprobe;
 +
@@ -712,6 +712,8 @@ index 0000000..071e82c
 +import android.accounts.OperationCanceledException;
 +import android.os.Bundle;
 +import java.io.IOException;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
 +import org.json.JSONException;
 +import org.json.JSONObject;
 +
@@ -734,12 +736,32 @@ index 0000000..071e82c
 +    public static String failure(Exception exception) {
 +        if (exception instanceof OperationCanceledException) return event("cancelled");
 +        if (exception instanceof AuthenticatorException) return event("authenticator_error");
-+        if (exception instanceof IOException) return event("io_error");
++        if (exception instanceof IOException) return ioFailure(exception);
 +        if (exception instanceof SecurityException) return event("access_denied");
 +        return event("unexpected_error");
 +    }
 +
 +    public static String event(String name) { return event(name, null); }
++
++    // AccountManager may wrap NetworkErrorException (and Google's error) in an
++    // IOException message. Copy only fixed, recognized identifiers, never that
++    // message or an arbitrary server-provided value.
++    private static String ioFailure(Exception exception) {
++        try {
++            JSONObject json = new JSONObject(event("io_error"));
++            Pattern transport = Pattern.compile("\\b(UnknownHostException|SocketTimeoutException|ConnectException|SSLHandshakeException|SSLPeerUnverifiedException|NotOkayException)\\b");
++            Pattern auth = Pattern.compile("(?:NotOkayException:\\s*|\\bError=)(BadAuthentication|NeedsBrowser|NeedsPermission|ServiceDisabled|SERVICE_DISABLED|SERVICE_UNAVAILABLE|ScopeLimitExceeded|AccessDenied|UNREGISTERED_ON_API_CONSOLE|INVALID_SCOPE|InvalidScope|BadRequest|InvalidValue|Unknown)(?=$|[\\s,;])");
++            Throwable cause = exception;
++            for (int i = 0; cause != null && i < 4; i++, cause = cause.getCause()) {
++                String message = cause.getClass().getName() + ": " + cause.getMessage();
++                Matcher match = transport.matcher(message);
++                if (match.find()) json.put("io_hint", match.group(1));
++                match = auth.matcher(message);
++                if (match.find()) json.put("auth_error_hint", match.group(1));
++            }
++            return json.toString();
++        } catch (JSONException impossible) { throw new IllegalStateException(impossible); }
++    }
 +
 +    private static String event(String name, Integer errorCode) {
 +        try {
@@ -752,16 +774,18 @@ index 0000000..071e82c
 +}
 diff --git a/wallet-auth-probe/src/test/java/org/microg/wallet/authprobe/AuthProbeReportTest.java b/wallet-auth-probe/src/test/java/org/microg/wallet/authprobe/AuthProbeReportTest.java
 new file mode 100644
-index 0000000..fde6a0d
+index 0000000..66e55a2
 --- /dev/null
 +++ b/wallet-auth-probe/src/test/java/org/microg/wallet/authprobe/AuthProbeReportTest.java
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,80 @@
 +/* SPDX-License-Identifier: Apache-2.0 */
 +package org.microg.wallet.authprobe;
 +
 +import android.accounts.AccountManager;
 +import android.accounts.AuthenticatorException;
 +import android.os.Bundle;
++import java.io.IOException;
++import java.net.UnknownHostException;
 +import org.json.JSONObject;
 +import org.junit.Test;
 +import org.junit.runner.RunWith;
@@ -806,6 +830,32 @@ index 0000000..fde6a0d
 +    @Test public void emptyTokenDoesNotCountAsAuthorized() throws Exception {
 +        Bundle response = new Bundle(); response.putString(AccountManager.KEY_AUTHTOKEN, "");
 +        assertEquals("no_token", new JSONObject(AuthProbeReport.result(response)).getString("event"));
++    }
++
++    @Test public void wrappedNetworkCauseReportsOnlyItsFixedType() throws Exception {
++        String report = AuthProbeReport.failure(new IOException(new UnknownHostException("private-host.example.invalid")));
++        assertEquals("UnknownHostException", new JSONObject(report).getString("io_hint"));
++        assertFalse(report.contains("private-host"));
++    }
++
++    @Test public void wrappedAuthErrorReportsOnlyAnAllowlistedCode() throws Exception {
++        String report = AuthProbeReport.failure(new IOException("org.microg.gms.common.NotOkayException: BadAuthentication private-account@example.invalid"));
++        JSONObject json = new JSONObject(report);
++        assertEquals("NotOkayException", json.getString("io_hint"));
++        assertEquals("BadAuthentication", json.getString("auth_error_hint"));
++        assertFalse(report.contains("private-account"));
++    }
++
++    @Test public void arbitraryErrorAndKeywordLikeSecretStayPrivate() throws Exception {
++        String report = AuthProbeReport.failure(new IOException("Error=private-secret NotOkayException: BadAuthentication_private-secret"));
++        assertFalse(new JSONObject(report).has("auth_error_hint"));
++        assertFalse(report.contains("private-secret"));
++    }
++
++    @Test public void actualDeviceRegistrationFailureRetainsOnlyTheErrorCode() throws Exception {
++        String report = AuthProbeReport.failure(new IOException("org.microg.gms.common.NotOkayException: UNREGISTERED_ON_API_CONSOLE\nprivate-details"));
++        assertEquals("UNREGISTERED_ON_API_CONSOLE", new JSONObject(report).getString("auth_error_hint"));
++        assertFalse(report.contains("private-details"));
 +    }
 +}
 diff --git a/wallet-web-core/build.gradle b/wallet-web-core/build.gradle

@@ -7,6 +7,7 @@
 !/LICENSE
 !/ROADMAP.md
 !/DEVICE_TESTS.md
+!/OAUTH_SETUP.md
 !/project.json
 !/tools/
 !/tests/
@@ -27,6 +28,8 @@
 !/verification/artifacts.json
 !/verification/service-integration-compile.json
 !/verification/fresh-bootstrap.json
+!/verification/device-native-flow.json
+!/verification/device-auth-probe.json
 !/verification/native-probe-first.txt
 !/verification/native-probe-context-initialized.txt
 __pycache__/
