@@ -44,18 +44,19 @@ HarmonyOS 4.2.0.242 / Android SDK 31。NFC 刷卡和 HarmonyOS NEXT 不属于当
 工程本身只保存自己的源码、补丁、公开研究索引与测试结果。Google APK、反编译源码、
 Android SDK、签名密钥及上游 checkout 都保留在本机并排除在版本控制之外。
 
-在工程根目录准备上游与 Android SDK 后：
+在工程根目录准备好 Android SDK 后：
 
 ```bash
-git clone --branch v0.3.17.252432 --depth 1 https://github.com/microg/GmsCore.git GmsCore
-git -C GmsCore apply ../patches/0001-wallet-web-protocol-foundation.patch
-# 在 GmsCore/local.properties 设置 sdk.dir；需要 Android SDK Platform 35 和 Build Tools 35.0.0。
+# 需要 Android SDK Platform 35 和 Build Tools 35.0.0。
+# 固定上游提交，应用补丁，并写入 SDK 路径；重复执行不会重置已有工作。
+python tools/bootstrap.py --sdk /absolute/path/to/android-sdk
 python tools/lab.py verify --gmscore GmsCore --java-home /usr/lib/jvm/java-17-openjdk
 python tools/lab.py status
 python tools/lab.py probe-summary verification/native-probe-context-initialized.txt
 ```
 
-本机已有修改过的 `GmsCore/`，不要重复应用补丁。
+脚本会识别已应用的补丁；遇到其他源码改动或不同的上游提交会停止并保留它们。
+本地不需要 Android SDK 的准备流程测试：`python -m unittest discover -s tests -v`。
 `native-port-probe/build.py` 使用相邻 `android-sdk/` 构建；运行探针需要单独安装它并提供
 Google 签名的、适配设备 Android 版本的原始 APK。它不会替换安装着的 microG。
 
