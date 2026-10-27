@@ -6,6 +6,7 @@
 !/README.md
 !/LICENSE
 !/ROADMAP.md
+!/DEVICE_TESTS.md
 !/project.json
 !/tools/
 !/tests/
@@ -21,7 +22,11 @@
 !/verification/
 /verification/*
 !/verification/protocol-test-result.json
-!/verification/TEST-org.microg.gms.wallet.WebPaymentWireTest.xml
+!/verification/TEST-*.xml
+!/verification/native-flow-result.json
+!/verification/artifacts.json
+!/verification/service-integration-compile.json
+!/verification/fresh-bootstrap.json
 !/verification/native-probe-first.txt
 !/verification/native-probe-context-initialized.txt
 __pycache__/

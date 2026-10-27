@@ -12,12 +12,19 @@ HarmonyOS 4.2.0.242 / Android SDK 31。NFC 刷卡和 HarmonyOS NEXT 不属于当
   `WebPaymentDataRequest` / `WebPaymentData`，以及 Cart 和 LineItem 的数据模型。
 - 独立构造 Wallet SDK 报文的协议测试：保留金额、币种、商品项、未知字段和外层参数；
   检查单向 Binder 调用、错误回调、携带 PendingIntent 的原生界面回调。
+- `wallet-web-core`：实际 OwServiceImpl 的调用方 UID 绑定、请求校验、独立且不可修改的一次性
+  PendingIntent，以及 Activity 的过期、错误和取消结果；目前界面只说明付款不可用。
+- `wallet-web-harness`：在独立应用中调用上述实际服务的 transaction 17，接收 callback 12 并打开
+  Activity；不替换手机上的 microG，也不访问账号或网络。
+- `wallet-auth-probe`：用户主动选择 Google 账号后，通过现有认证器请求 Sierra OAuth 授权；
+  只保存授权结果分类，不保存账号名、令牌或服务端错误原文。它不发起付款。
 - `native-port-probe/`：在独立 Android 应用中测试官方钱包类加载与服务初始化。
   它没有网络或账号权限，不发送付款请求；Google 24.40.34 的实验性上下文适配是版本特定的。
 - `research/` 保存本轮公开资料检索结果；`verification/` 保存脱离付款数据的实验结果。
 
-现有服务补丁仍然返回 `API_NOT_CONNECTED`。原生 UI 的 PendingIntent **仅通过协议单元测试**，
-没有接入一个能付款的 Activity。一次类加载成功或测试成功都不表示 Google Pay 已可用。
+现有服务对有效请求返回 `RESOLUTION_REQUIRED`，Activity 再返回 `API_NOT_CONNECTED` 或取消；
+`isReadyToPay` 仍然返回 false。原生服务、界面和返回已通过单元测试，尚未在手机验证，
+也没有接入能付款的 Google 后端。一次类加载、界面唤起或 OAuth 授权成功都不代表支付已可用。
 
 ## 研究结论
 
@@ -54,6 +61,10 @@ python tools/lab.py verify --gmscore GmsCore --java-home /usr/lib/jvm/java-17-op
 python tools/lab.py status
 python tools/lab.py probe-summary verification/native-probe-context-initialized.txt
 ```
+
+当前验证包括 5 项协议测试、13 项原生交接流程测试、4 项授权诊断测试，以及两个测试 APK 的构建。
+APK 会复制到本地 `artifacts/`，校验值写入 `verification/artifacts.json`；APK 不纳入源码仓库。
+接手机后的步骤见 [DEVICE_TESTS.md](DEVICE_TESTS.md)。
 
 脚本会识别已应用的补丁；遇到其他源码改动或不同的上游提交会停止并保留它们。
 本地不需要 Android SDK 的准备流程测试：`python -m unittest discover -s tests -v`。

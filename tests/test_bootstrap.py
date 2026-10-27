@@ -70,6 +70,21 @@ class BootstrapTest(unittest.TestCase):
             bootstrap.prepare(self.destination, self.project)
         self.assertEqual(head, git(self.destination, "rev-parse", "HEAD"))
 
+    def test_source_moved_between_modules_remains_idempotent(self):
+        old = self.upstream / "source.txt"
+        new = self.upstream / "new-module/source.txt"
+        new.parent.mkdir()
+        old.rename(new)
+        git(self.upstream, "add", "-N", "new-module/source.txt")
+        patch = git(self.upstream, "diff", "--binary", "--no-renames", "HEAD")
+        (self.project / "patches/0001-wallet-web-protocol-foundation.patch").write_text(patch)
+        git(self.upstream, "reset", "--hard", "HEAD")
+        first = bootstrap.prepare(self.destination, self.project)
+        self.assertEqual("applied", first["patch"])
+        self.assertFalse((self.destination / "source.txt").exists())
+        self.assertEqual("baseline\n", (self.destination / "new-module/source.txt").read_text())
+        self.assertEqual("already_applied", bootstrap.prepare(self.destination, self.project)["patch"])
+
 
 if __name__ == "__main__":
     unittest.main()

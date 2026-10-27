@@ -1,0 +1,5 @@
+{
+  "source": "PaymentService.java",
+  "exit_code": 0,
+  "scope": "Isolated javac against compiled microG modules and Android SDK; not a full GmsCore APK build"
+}

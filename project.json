@@ -1,6 +1,6 @@
 {
   "name": "microg-payments-lab",
-  "status": "experimental_protocol_foundation",
+  "status": "experimental_native_handoff",
   "payment_working": false,
   "scope": "Chrome online Google Pay on Android-compatible Huawei firmware",
   "device_baseline": {
@@ -15,7 +15,7 @@
     "commit": "32bc8954ff872d0e1a05ddfae81561b6dbecef69"
   },
   "protocol_reference": "Google Wallet SDK 20.0.0",
-  "next_gate": "Establish an authenticated TEST payment initialization and result flow",
+  "next_gate": "On-device native error/cancel handoff and user-initiated Sierra OAuth scope probe; Google TEST payment initialization remains unimplemented",
   "not_implemented": [
     "Google-backed web payment initialization and token acquisition",
     "Production payment UI and authorization",
@@ -29,5 +29,26 @@
     "errors": 0,
     "skipped": 0,
     "scope": "ABI and callback round trips only; no on-device payment verification"
-  }
+  },
+  "device_validation": "pending",
+  "native_flow_tests": {
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "scope": "Actual OwServiceImpl Binder dispatch and Android Activity error/cancel lifecycle under Robolectric"
+  },
+  "auth_diagnostic_tests": {
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "scope": "Diagnostic redaction only; real OAuth authorization has not been tested"
+  },
+  "bootstrap_tests": {
+    "tests": 4,
+    "failures": 0
+  },
+  "test_apps": [
+    "org.microg.wallet.lab",
+    "org.microg.wallet.authprobe"
+  ]
 }

@@ -451,39 +451,1127 @@ index 0000000..31d3470
 +        assertEquals(1, calls.get());
 +    }
 +}
+diff --git a/play-services-core/build.gradle b/play-services-core/build.gradle
+index 4d25419..b33d826 100644
+--- a/play-services-core/build.gradle
++++ b/play-services-core/build.gradle
+@@ -56,6 +56,7 @@ dependencies {
+     implementation project(':play-services-core:microg-ui-tools') // deprecated
+     implementation project(':play-services-base-core-package')
+     implementation project(':play-services-api')
++    implementation project(':wallet-web-core')
+ 
+     implementation project(':play-services-appinvite')
+     implementation project(':play-services-auth-base')
 diff --git a/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java b/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
-index a414f74..7d70173 100644
+deleted file mode 100644
+index a414f74..0000000
 --- a/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
-+++ b/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
-@@ -23,9 +23,11 @@ import android.os.RemoteException;
- import android.util.Log;
++++ /dev/null
+@@ -1,66 +0,0 @@
+-/*
+- * Copyright (C) 2013-2017 microG Project Team
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package org.microg.gms.wallet;
+-
+-import android.content.Context;
+-import android.os.Bundle;
+-import android.os.Parcel;
+-import android.os.RemoteException;
+-import android.util.Log;
+-
+-import com.google.android.gms.common.api.Status;
+-import com.google.android.gms.wallet.GetClientTokenRequest;
+-import com.google.android.gms.wallet.GetClientTokenResponse;
+-import com.google.android.gms.wallet.IsReadyToPayRequest;
+-import com.google.android.gms.wallet.internal.IOwService;
+-import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
+-
+-public class OwServiceImpl extends IOwService.Stub {
+-    private static final String TAG = "GmsWalletOwSvc";
+-    private Context context;
+-
+-    public OwServiceImpl(Context context) {
+-        this.context = context;
+-    }
+-
+-    @Override
+-    public void isReadyToPay(IsReadyToPayRequest request, Bundle args, IWalletServiceCallbacks callbacks) throws RemoteException {
+-        Log.d(TAG, "isReadyToPay: " + request.toJson());
+-        try {
+-            callbacks.onIsReadyToPayResponse(Status.SUCCESS, false, Bundle.EMPTY);
+-        } catch (Exception e) {
+-            Log.w(TAG, e);
+-        }
+-    }
+-
+-    @Override
+-    public void getClientToken(GetClientTokenRequest getClientTokenRequest, Bundle options, IWalletServiceCallbacks callbacks) throws RemoteException {
+-        Log.d(TAG, "getClientToken: " + options);
+-        try {
+-            callbacks.onClientTokenReceived(Status.INTERNAL_ERROR, new GetClientTokenResponse(), Bundle.EMPTY);
+-        } catch (Exception e) {
+-            Log.w(TAG, e);
+-        }
+-    }
+-
+-    @Override
+-    public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+-        if (super.onTransact(code, data, reply, flags)) return true;
+-        Log.d(TAG, "onTransact [unknown]: " + code + ", " + data + ", " + flags);
+-        return false;
+-    }
+-}
+diff --git a/play-services-core/src/main/java/org/microg/gms/wallet/PaymentService.java b/play-services-core/src/main/java/org/microg/gms/wallet/PaymentService.java
+index 2bdcfa4..2a85dab 100644
+--- a/play-services-core/src/main/java/org/microg/gms/wallet/PaymentService.java
++++ b/play-services-core/src/main/java/org/microg/gms/wallet/PaymentService.java
+@@ -17,6 +17,7 @@
+ package org.microg.gms.wallet;
  
- import com.google.android.gms.common.api.Status;
-+import com.google.android.gms.common.api.CommonStatusCodes;
- import com.google.android.gms.wallet.GetClientTokenRequest;
- import com.google.android.gms.wallet.GetClientTokenResponse;
- import com.google.android.gms.wallet.IsReadyToPayRequest;
-+import com.google.android.gms.wallet.WebPaymentDataRequest;
- import com.google.android.gms.wallet.internal.IOwService;
- import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
+ import android.os.RemoteException;
++import android.os.Binder;
  
-@@ -57,6 +59,19 @@ public class OwServiceImpl extends IOwService.Stub {
-         }
+ import com.google.android.gms.common.Feature;
+ import com.google.android.gms.common.api.CommonStatusCodes;
+@@ -26,6 +27,7 @@ import com.google.android.gms.common.internal.IGmsCallbacks;
+ 
+ import org.microg.gms.BaseService;
+ import org.microg.gms.common.GmsService;
++import org.microg.gms.common.PackageUtils;
+ 
+ public class PaymentService extends BaseService {
+ 
+@@ -46,8 +48,11 @@ public class PaymentService extends BaseService {
+ 
+     @Override
+     public void handleServiceRequest(IGmsCallbacks callback, GetServiceRequest request, GmsService service) throws RemoteException {
++        String callerPackage = PackageUtils.getAndCheckCallingPackage(this, request.packageName);
++        if (callerPackage == null) throw new SecurityException("Missing wallet caller package");
+         ConnectionInfo connectionInfo = new ConnectionInfo();
+         connectionInfo.features = FEATURES;
+-        callback.onPostInitCompleteWithConnectionInfo(CommonStatusCodes.SUCCESS, new OwServiceImpl(this), connectionInfo);
++        callback.onPostInitCompleteWithConnectionInfo(CommonStatusCodes.SUCCESS,
++                new OwServiceImpl(this, Binder.getCallingUid(), callerPackage), connectionInfo);
      }
+ }
+diff --git a/settings.gradle b/settings.gradle
+index 331ed33..fc7f27c 100644
+--- a/settings.gradle
++++ b/settings.gradle
+@@ -68,6 +68,9 @@ include ':play-services-wearable'
+ include ':play-services-fitness'
  
-+    @Override
-+    public void loadWebPaymentData(WebPaymentDataRequest request, Bundle options, IWalletServiceCallbacks callbacks) throws RemoteException {
-+        // Chrome waits for callback transaction 12. Leaving request transaction
-+        // 17 unhandled leaves Chrome without a completion callback.
-+        // A completed error is not a successful payment: never manufacture a
-+        // wallet token or advertise a payment UI that is not implemented.
-+        callbacks.onWebPaymentDataLoaded(
-+                new Status(CommonStatusCodes.API_NOT_CONNECTED,
-+                        "Google Pay web payments are not implemented by this microG build"),
-+                null,
-+                Bundle.EMPTY);
+ include ':play-services-api'
++include ':wallet-web-core'
++include ':wallet-web-harness'
++include ':wallet-auth-probe'
+ include ':play-services'
+ 
+ include ':firebase-auth'
+diff --git a/wallet-auth-probe/build.gradle b/wallet-auth-probe/build.gradle
+new file mode 100644
+index 0000000..695d0bf
+--- /dev/null
++++ b/wallet-auth-probe/build.gradle
+@@ -0,0 +1,22 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++apply plugin: 'com.android.application'
++android {
++    namespace 'org.microg.wallet.authprobe'
++    compileSdkVersion androidCompileSdk
++    buildToolsVersion "$androidBuildVersionTools"
++    defaultConfig {
++        applicationId 'org.microg.wallet.authprobe'
++        minSdkVersion 23
++        targetSdkVersion 31
++        versionCode 1
++        versionName '0.1-authorization-probe'
++    }
++    compileOptions {
++        sourceCompatibility = 1.8
++        targetCompatibility = 1.8
++    }
++}
++dependencies {
++    testImplementation 'junit:junit:4.13.2'
++    testImplementation 'org.robolectric:robolectric:4.14.1'
++}
+diff --git a/wallet-auth-probe/src/main/AndroidManifest.xml b/wallet-auth-probe/src/main/AndroidManifest.xml
+new file mode 100644
+index 0000000..b09ebac
+--- /dev/null
++++ b/wallet-auth-probe/src/main/AndroidManifest.xml
+@@ -0,0 +1,11 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
++    <application android:label="Wallet authorization probe" android:allowBackup="false"
++        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
++        <activity android:name="org.microg.wallet.authprobe.AuthProbeActivity" android:exported="true">
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++                <category android:name="android.intent.category.LAUNCHER" />
++            </intent-filter>
++        </activity>
++    </application>
++</manifest>
+diff --git a/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeActivity.java b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeActivity.java
+new file mode 100644
+index 0000000..8d021f9
+--- /dev/null
++++ b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeActivity.java
+@@ -0,0 +1,65 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.wallet.authprobe;
++
++import android.accounts.Account;
++import android.accounts.AccountManager;
++import android.app.Activity;
++import android.content.Intent;
++import android.os.Bundle;
++import android.widget.Button;
++import android.widget.LinearLayout;
++import android.widget.TextView;
++import java.io.FileOutputStream;
++import java.nio.charset.StandardCharsets;
++
++/** User-initiated scope-availability check against the existing authenticator. */
++public final class AuthProbeActivity extends Activity {
++    private TextView output;
++    private Button start;
++
++    @Override public void onCreate(Bundle state) {
++        super.onCreate(state);
++        LinearLayout layout = new LinearLayout(this); layout.setOrientation(LinearLayout.VERTICAL);
++        int padding = (int) (20 * getResources().getDisplayMetrics().density);
++        layout.setPadding(padding, padding, padding, padding);
++        TextView explanation = new TextView(this);
++        explanation.setText("支付授权可行性检查\n\n点击后选择 Google 账号，由现有 microG 处理授权；若出现授权页，请自行决定是否同意。这里只检查支付服务授权是否可用，不查询银行卡或发起付款，也不保存账号名或令牌。\n");
++        layout.addView(explanation);
++        start = new Button(this); start.setText("选择账号并检查授权");
++        start.setOnClickListener(view -> {
++            start.setEnabled(false);
++            try {
++                Intent choose = AccountManager.newChooseAccountIntent(null, null,
++                        new String[]{"com.google"}, null, null, null, null);
++                startActivityForResult(choose, 1);
++            } catch (Exception exception) { report(AuthProbeReport.failure(exception)); }
++        });
++        layout.addView(start);
++        output = new TextView(this); layout.addView(output); setContentView(layout);
 +    }
 +
-     @Override
-     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
-         if (super.onTransact(code, data, reply, flags)) return true;
++    @Override protected void onActivityResult(int request, int result, Intent data) {
++        super.onActivityResult(request, result, data);
++        if (request != 1) return;
++        if (result != RESULT_OK || data == null) { report(AuthProbeReport.event("cancelled")); return; }
++        String name = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
++        String type = data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE);
++        if (name == null || name.isEmpty() || !"com.google".equals(type)) {
++            report(AuthProbeReport.event("invalid_account_selection")); return;
++        }
++        try {
++            AccountManager.get(this).getAuthToken(new Account(name, type), AuthProbeReport.SCOPE,
++                    new Bundle(), this, future -> {
++                        try { report(AuthProbeReport.result(future.getResult())); }
++                        catch (Exception exception) { report(AuthProbeReport.failure(exception)); }
++                    }, null);
++        } catch (Exception exception) { report(AuthProbeReport.failure(exception)); }
++    }
++
++    private void report(String diagnostic) {
++        if (!isDestroyed()) { output.setText(diagnostic); start.setEnabled(true); }
++        try (FileOutputStream stream = openFileOutput("events.jsonl", MODE_APPEND)) {
++            stream.write((diagnostic + "\n").getBytes(StandardCharsets.UTF_8));
++        } catch (Exception ignored) {}
++    }
++}
+diff --git a/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeReport.java b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeReport.java
+new file mode 100644
+index 0000000..071e82c
+--- /dev/null
++++ b/wallet-auth-probe/src/main/java/org/microg/wallet/authprobe/AuthProbeReport.java
+@@ -0,0 +1,46 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.wallet.authprobe;
++
++import android.accounts.AccountManager;
++import android.accounts.AuthenticatorException;
++import android.accounts.OperationCanceledException;
++import android.os.Bundle;
++import java.io.IOException;
++import org.json.JSONException;
++import org.json.JSONObject;
++
++/** Allowlisted diagnostics. Account names, tokens and server messages stay out. */
++public final class AuthProbeReport {
++    public static final String SCOPE = "oauth2:https://www.googleapis.com/auth/sierra";
++    private AuthProbeReport() {}
++
++    public static String result(Bundle result) {
++        if (result == null) return event("empty_authenticator_response");
++        if (result.containsKey(AccountManager.KEY_ERROR_CODE)) {
++            return event("authenticator_error", result.getInt(AccountManager.KEY_ERROR_CODE));
++        }
++        String token = result.getString(AccountManager.KEY_AUTHTOKEN);
++        if (token != null && !token.isEmpty()) return event("token_acquired");
++        if (result.containsKey(AccountManager.KEY_INTENT)) return event("interactive_authorization_required");
++        return event("no_token");
++    }
++
++    public static String failure(Exception exception) {
++        if (exception instanceof OperationCanceledException) return event("cancelled");
++        if (exception instanceof AuthenticatorException) return event("authenticator_error");
++        if (exception instanceof IOException) return event("io_error");
++        if (exception instanceof SecurityException) return event("access_denied");
++        return event("unexpected_error");
++    }
++
++    public static String event(String name) { return event(name, null); }
++
++    private static String event(String name, Integer errorCode) {
++        try {
++            JSONObject json = new JSONObject().put("event", name).put("scope", SCOPE)
++                    .put("token_exposed", false).put("payment_attempted", false);
++            if (errorCode != null) json.put("error_code", errorCode);
++            return json.toString();
++        } catch (JSONException impossible) { throw new IllegalStateException(impossible); }
++    }
++}
+diff --git a/wallet-auth-probe/src/test/java/org/microg/wallet/authprobe/AuthProbeReportTest.java b/wallet-auth-probe/src/test/java/org/microg/wallet/authprobe/AuthProbeReportTest.java
+new file mode 100644
+index 0000000..fde6a0d
+--- /dev/null
++++ b/wallet-auth-probe/src/test/java/org/microg/wallet/authprobe/AuthProbeReportTest.java
+@@ -0,0 +1,52 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.wallet.authprobe;
++
++import android.accounts.AccountManager;
++import android.accounts.AuthenticatorException;
++import android.os.Bundle;
++import org.json.JSONObject;
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.robolectric.RobolectricTestRunner;
++import org.robolectric.annotation.Config;
++import static org.junit.Assert.*;
++
++@RunWith(RobolectricTestRunner.class)
++@Config(manifest = Config.NONE, sdk = 28)
++public class AuthProbeReportTest {
++    @Test public void tokenAndAccountNeverEnterTheDiagnostic() throws Exception {
++        Bundle response = new Bundle();
++        response.putString(AccountManager.KEY_AUTHTOKEN, "synthetic-secret-for-redaction-test");
++        response.putString(AccountManager.KEY_ACCOUNT_NAME, "synthetic-account@example.invalid");
++        response.putString("arbitrary_extra", "another-private-value");
++        String report = AuthProbeReport.result(response);
++        assertFalse(report.contains("synthetic-secret"));
++        assertFalse(report.contains("synthetic-account"));
++        assertFalse(report.contains("another-private-value"));
++        JSONObject json = new JSONObject(report);
++        assertEquals("token_acquired", json.getString("event"));
++        assertFalse(json.getBoolean("payment_attempted"));
++        assertFalse(json.getBoolean("token_exposed"));
++    }
++
++    @Test public void serverErrorMessagesAreNotCopiedIntoReports() throws Exception {
++        Bundle response = new Bundle();
++        response.putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_UNSUPPORTED_OPERATION);
++        response.putString(AccountManager.KEY_ERROR_MESSAGE, "private error description with an account identifier");
++        String report = AuthProbeReport.result(response);
++        assertFalse(report.contains("private error description"));
++        assertEquals("authenticator_error", new JSONObject(report).getString("event"));
++        assertEquals(AccountManager.ERROR_CODE_UNSUPPORTED_OPERATION, new JSONObject(report).getInt("error_code"));
++    }
++
++    @Test public void exceptionMessagesCannotLeakAccountOrTokenData() throws Exception {
++        String report = AuthProbeReport.failure(new AuthenticatorException("private error content"));
++        assertFalse(report.contains("private error content"));
++        assertEquals("authenticator_error", new JSONObject(report).getString("event"));
++    }
++
++    @Test public void emptyTokenDoesNotCountAsAuthorized() throws Exception {
++        Bundle response = new Bundle(); response.putString(AccountManager.KEY_AUTHTOKEN, "");
++        assertEquals("no_token", new JSONObject(AuthProbeReport.result(response)).getString("event"));
++    }
++}
+diff --git a/wallet-web-core/build.gradle b/wallet-web-core/build.gradle
+new file mode 100644
+index 0000000..9d06dbb
+--- /dev/null
++++ b/wallet-web-core/build.gradle
+@@ -0,0 +1,23 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++apply plugin: 'com.android.library'
++
++android {
++    namespace 'org.microg.gms.wallet.web'
++    compileSdkVersion androidCompileSdk
++    buildToolsVersion "$androidBuildVersionTools"
++    defaultConfig {
++        minSdkVersion androidMinSdk
++        targetSdkVersion androidTargetSdk
++    }
++    compileOptions {
++        sourceCompatibility = 1.8
++        targetCompatibility = 1.8
++    }
++    testOptions.unitTests.includeAndroidResources = true
++}
++
++dependencies {
++    api project(':play-services-api')
++    testImplementation 'junit:junit:4.13.2'
++    testImplementation 'org.robolectric:robolectric:4.14.1'
++}
+diff --git a/wallet-web-core/src/main/AndroidManifest.xml b/wallet-web-core/src/main/AndroidManifest.xml
+new file mode 100644
+index 0000000..494d384
+--- /dev/null
++++ b/wallet-web-core/src/main/AndroidManifest.xml
+@@ -0,0 +1,9 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
++    <application>
++        <activity android:name="org.microg.gms.wallet.web.WebPaymentActivity"
++            android:exported="false"
++            android:excludeFromRecents="true"
++            android:theme="@android:style/Theme.DeviceDefault.Light.Dialog.Alert"
++            android:label="@string/wallet_web_unavailable_title" />
++    </application>
++</manifest>
+diff --git a/wallet-web-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java b/wallet-web-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
+new file mode 100644
+index 0000000..d22f882
+--- /dev/null
++++ b/wallet-web-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
+@@ -0,0 +1,81 @@
++/*
++ * Copyright (C) 2013-2017 microG Project Team
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.microg.gms.wallet;
++
++import android.content.Context;
++import android.os.Bundle;
++import android.os.Parcel;
++import android.os.RemoteException;
++import android.os.Binder;
++import android.util.Log;
++
++import com.google.android.gms.common.api.Status;
++import com.google.android.gms.wallet.GetClientTokenRequest;
++import com.google.android.gms.wallet.GetClientTokenResponse;
++import com.google.android.gms.wallet.IsReadyToPayRequest;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
++import com.google.android.gms.wallet.internal.IOwService;
++import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
++import org.microg.gms.wallet.web.WebPaymentBridge;
++
++public class OwServiceImpl extends IOwService.Stub {
++    private static final String TAG = "GmsWalletOwSvc";
++    private final int ownerUid;
++    private final WebPaymentBridge webPayments;
++
++    public OwServiceImpl(Context context, int ownerUid, String ownerPackage) {
++        this.ownerUid = ownerUid;
++        this.webPayments = new WebPaymentBridge(context, ownerUid, ownerPackage);
++    }
++
++    @Override
++    public void isReadyToPay(IsReadyToPayRequest request, Bundle args, IWalletServiceCallbacks callbacks) throws RemoteException {
++        checkCaller();
++        try {
++            callbacks.onIsReadyToPayResponse(Status.SUCCESS, false, Bundle.EMPTY);
++        } catch (Exception e) {
++            Log.w(TAG, e);
++        }
++    }
++
++    @Override
++    public void getClientToken(GetClientTokenRequest getClientTokenRequest, Bundle options, IWalletServiceCallbacks callbacks) throws RemoteException {
++        checkCaller();
++        try {
++            callbacks.onClientTokenReceived(Status.INTERNAL_ERROR, new GetClientTokenResponse(), Bundle.EMPTY);
++        } catch (Exception e) {
++            Log.w(TAG, e);
++        }
++    }
++
++    @Override
++    public void loadWebPaymentData(WebPaymentDataRequest request, Bundle options, IWalletServiceCallbacks callbacks) throws RemoteException {
++        checkCaller();
++        webPayments.load(request, options, callbacks);
++    }
++
++    private void checkCaller() {
++        if (Binder.getCallingUid() != ownerUid) throw new SecurityException("Wallet caller UID mismatch");
++    }
++
++    @Override
++    public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
++        if (super.onTransact(code, data, reply, flags)) return true;
++        Log.d(TAG, "onTransact [unknown]: " + code + ", " + data + ", " + flags);
++        return false;
++    }
++}
+diff --git a/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentActivity.java b/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentActivity.java
+new file mode 100644
+index 0000000..33d23da
+--- /dev/null
++++ b/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentActivity.java
+@@ -0,0 +1,59 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.gms.wallet.web;
++
++import android.app.Activity;
++import android.app.AlertDialog;
++import android.os.Bundle;
++import android.os.SystemClock;
++import com.google.android.gms.common.api.CommonStatusCodes;
++import com.google.android.gms.common.api.Status;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
++
++/** Completes native error/cancel flow while the payment backend is unavailable. */
++public final class WebPaymentActivity extends Activity {
++    private boolean finished;
++
++    @Override public void onCreate(Bundle state) {
++        super.onCreate(state);
++        // Even if the process is recreated, the default outcome must never be OK.
++        setResult(RESULT_FIRST_USER, WebPaymentResults.error(unavailable()));
++        try {
++            long expires = getIntent().getLongExtra(WebPaymentBridge.EXPIRES, -1);
++            if (expires <= SystemClock.elapsedRealtime()) {
++                complete(new Status(CommonStatusCodes.TIMEOUT, "Web payment request expired"));
++                return;
++            }
++            getIntent().setExtrasClassLoader(WebPaymentDataRequest.class.getClassLoader());
++            WebPaymentDataRequest request = getIntent().getParcelableExtra(WebPaymentBridge.REQUEST);
++            WebPaymentBridge.validate(request);
++            String caller = getIntent().getStringExtra(WebPaymentBridge.CALLER);
++            if (caller == null || caller.isEmpty()) throw new IllegalArgumentException("Missing caller");
++        } catch (RuntimeException exception) {
++            complete(new Status(CommonStatusCodes.DEVELOPER_ERROR, "Invalid web payment activity request"));
++            return;
++        }
++        // No card selection/confirmation is shown: no genuine payment backend
++        // has been connected. This is the terminal error UI, not a payment sheet.
++        new AlertDialog.Builder(this)
++                .setTitle(R.string.wallet_web_unavailable_title)
++                .setMessage(R.string.wallet_web_unavailable_message)
++                .setPositiveButton(R.string.wallet_web_return, (dialog, which) -> complete(unavailable()))
++                .setNegativeButton(R.string.wallet_web_cancel, (dialog, which) -> complete(Status.CANCELED))
++                .setOnCancelListener(dialog -> complete(Status.CANCELED))
++                .show();
++    }
++
++    @Override public void onBackPressed() { complete(Status.CANCELED); }
++
++    private static Status unavailable() {
++        return new Status(CommonStatusCodes.API_NOT_CONNECTED, "Google Pay backend is not implemented");
++    }
++
++    private void complete(Status status) {
++        if (finished) return;
++        finished = true;
++        setResult(status.getStatusCode() == CommonStatusCodes.CANCELED ? RESULT_CANCELED : RESULT_FIRST_USER,
++                WebPaymentResults.error(status));
++        finish();
++    }
++}
+diff --git a/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentBridge.java b/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentBridge.java
+new file mode 100644
+index 0000000..5c5e22f
+--- /dev/null
++++ b/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentBridge.java
+@@ -0,0 +1,125 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.gms.wallet.web;
++
++import android.app.PendingIntent;
++import android.content.Context;
++import android.content.Intent;
++import android.net.Uri;
++import android.os.Binder;
++import android.os.Bundle;
++import android.os.Parcel;
++import android.os.RemoteException;
++import android.os.SystemClock;
++import com.google.android.gms.common.api.CommonStatusCodes;
++import com.google.android.gms.common.api.Status;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
++import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
++import org.json.JSONException;
++import org.json.JSONObject;
++import java.net.URI;
++import java.net.URISyntaxException;
++import java.util.UUID;
++
++/** Native Wallet hand-off only. No Google-backed payment provider exists yet. */
++public final class WebPaymentBridge {
++    static final String REQUEST = "org.microg.wallet.web.REQUEST";
++    static final String CALLER = "org.microg.wallet.web.CALLER";
++    static final String OPTIONS = "org.microg.wallet.web.OPTIONS";
++    static final String EXPIRES = "org.microg.wallet.web.EXPIRES";
++    private static final long UI_TIMEOUT_MILLIS = 10 * 60 * 1000;
++    private static final int MAX_REQUEST_BYTES = 512 * 1024;
++    private final Context context;
++    private final int ownerUid;
++    private final String ownerPackage;
++
++    public WebPaymentBridge(Context context, int ownerUid, String ownerPackage) {
++        if (context == null || ownerPackage == null || ownerPackage.isEmpty()) {
++            throw new IllegalArgumentException("A verified caller binding is required");
++        }
++        this.context = context.getApplicationContext();
++        this.ownerUid = ownerUid;
++        this.ownerPackage = ownerPackage;
++    }
++
++    public void load(WebPaymentDataRequest request, Bundle options,
++                     IWalletServiceCallbacks callbacks) throws RemoteException {
++        // Bind every transaction to the UID validated at GetService time.
++        if (Binder.getCallingUid() != ownerUid) throw new SecurityException("Wallet caller UID mismatch");
++        if (callbacks == null) throw new IllegalArgumentException("Wallet callback is required");
++        WebPaymentDataRequest snapshot;
++        try {
++            validate(request);
++            if (options != null) {
++                String claimedPackage = options.getString("androidPackageName");
++                if (claimedPackage != null && !ownerPackage.equals(claimedPackage)) {
++                    throw new IllegalArgumentException("Wallet package binding mismatch");
++                }
++            }
++            snapshot = snapshot(request);
++        } catch (IllegalArgumentException exception) {
++            callbacks.onWebPaymentDataLoaded(new Status(CommonStatusCodes.DEVELOPER_ERROR,
++                    "Invalid web payment request"), null, Bundle.EMPTY);
++            return;
++        }
++
++        // Never inherit the browser's Binder identity when creating our capability.
++        long identity = Binder.clearCallingIdentity();
++        PendingIntent resolution;
++        try {
++            Intent intent = new Intent(context, WebPaymentActivity.class)
++                    .setData(Uri.parse("microg-wallet://web/" + UUID.randomUUID()))
++                    .putExtra(REQUEST, snapshot)
++                    .putExtra(CALLER, ownerPackage)
++                    .putExtra(EXPIRES, SystemClock.elapsedRealtime() + UI_TIMEOUT_MILLIS)
++                    .putExtra(OPTIONS, options == null ? new Bundle() : new Bundle(options));
++            resolution = PendingIntent.getActivity(context, 0, intent,
++                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
++        } catch (RuntimeException exception) {
++            callbacks.onWebPaymentDataLoaded(new Status(CommonStatusCodes.INTERNAL_ERROR,
++                    "Unable to create web payment UI"), null, Bundle.EMPTY);
++            return;
++        } finally {
++            Binder.restoreCallingIdentity(identity);
++        }
++        try {
++            callbacks.onWebPaymentDataLoaded(new Status(CommonStatusCodes.RESOLUTION_REQUIRED,
++                    "Web payment UI must be opened", resolution), null, Bundle.EMPTY);
++        } catch (RemoteException exception) {
++            resolution.cancel();
++            throw exception;
++        }
++    }
++
++    static void validate(WebPaymentDataRequest request) {
++        if (request == null) throw new IllegalArgumentException("Missing request");
++        try {
++            URI origin = new URI(request.getMerchantOrigin());
++            String path = origin.getRawPath();
++            int port = origin.getPort();
++            if (!"https".equalsIgnoreCase(origin.getScheme()) || origin.getHost() == null
++                    || origin.getRawUserInfo() != null || origin.getRawQuery() != null
++                    || origin.getRawFragment() != null || (path != null && !path.isEmpty() && !"/".equals(path))
++                    || port == 0 || port > 65535) throw new IllegalArgumentException("Invalid merchant origin");
++        } catch (URISyntaxException | NullPointerException exception) {
++            throw new IllegalArgumentException("Invalid merchant origin", exception);
++        }
++        String parameters = request.getWalletParameters();
++        byte[] encrypted = request.getEncryptedParameters();
++        if (parameters != null && !parameters.isEmpty()) {
++            try { new JSONObject(parameters); }
++            catch (JSONException exception) { throw new IllegalArgumentException("Invalid wallet JSON", exception); }
++        } else if (encrypted == null || encrypted.length == 0) {
++            throw new IllegalArgumentException("Missing wallet parameters");
++        }
++    }
++
++    private static WebPaymentDataRequest snapshot(WebPaymentDataRequest request) {
++        Parcel parcel = Parcel.obtain();
++        try {
++            request.writeToParcel(parcel, 0);
++            if (parcel.dataSize() > MAX_REQUEST_BYTES) throw new IllegalArgumentException("Request too large");
++            parcel.setDataPosition(0);
++            return WebPaymentDataRequest.CREATOR.createFromParcel(parcel);
++        } finally { parcel.recycle(); }
++    }
++}
+diff --git a/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentResults.java b/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentResults.java
+new file mode 100644
+index 0000000..25aedf8
+--- /dev/null
++++ b/wallet-web-core/src/main/java/org/microg/gms/wallet/web/WebPaymentResults.java
+@@ -0,0 +1,23 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.gms.wallet.web;
++
++import android.content.Intent;
++import com.google.android.gms.common.api.Status;
++
++/** Activity-result formats used by Wallet SDK clients and Chrome's legacy path. */
++public final class WebPaymentResults {
++    public static final String STATUS = "com.google.android.gms.common.api.AutoResolveHelper.status";
++    public static final String ERROR_CODE = "com.google.android.gms.wallet.EXTRA_ERROR_CODE";
++    public static final String ERROR_MESSAGE = "com.google.android.gms.wallet.EXTRA_ERROR_MESSAGE";
++
++    private WebPaymentResults() {}
++
++    public static Intent error(Status status) {
++        if (status == null || status.isSuccess() || status.hasResolution()) {
++            throw new IllegalArgumentException("A terminal non-success status is required");
++        }
++        return new Intent().putExtra(STATUS, status)
++                .putExtra(ERROR_CODE, status.getStatusCode())
++                .putExtra(ERROR_MESSAGE, status.getStatusMessage());
++    }
++}
+diff --git a/wallet-web-core/src/main/res/values-zh-rCN/strings.xml b/wallet-web-core/src/main/res/values-zh-rCN/strings.xml
+new file mode 100644
+index 0000000..df7f67a
+--- /dev/null
++++ b/wallet-web-core/src/main/res/values-zh-rCN/strings.xml
+@@ -0,0 +1,6 @@
++<resources>
++    <string name="wallet_web_unavailable_title">付款暂不可用</string>
++    <string name="wallet_web_unavailable_message">此实验构建尚未支持 Google Pay，未发起付款。请返回并选择其他付款方式。</string>
++    <string name="wallet_web_return">返回</string>
++    <string name="wallet_web_cancel">取消</string>
++</resources>
+diff --git a/wallet-web-core/src/main/res/values/strings.xml b/wallet-web-core/src/main/res/values/strings.xml
+new file mode 100644
+index 0000000..81e3902
+--- /dev/null
++++ b/wallet-web-core/src/main/res/values/strings.xml
+@@ -0,0 +1,6 @@
++<resources>
++    <string name="wallet_web_unavailable_title">Payment unavailable</string>
++    <string name="wallet_web_unavailable_message">Google Pay is not yet supported by this experimental build. No payment has been made. Please return and choose another payment method.</string>
++    <string name="wallet_web_return">Return</string>
++    <string name="wallet_web_cancel">Cancel</string>
++</resources>
+diff --git a/wallet-web-core/src/test/java/org/microg/gms/wallet/web/WebPaymentBridgeTest.java b/wallet-web-core/src/test/java/org/microg/gms/wallet/web/WebPaymentBridgeTest.java
+new file mode 100644
+index 0000000..7d1a8db
+--- /dev/null
++++ b/wallet-web-core/src/test/java/org/microg/gms/wallet/web/WebPaymentBridgeTest.java
+@@ -0,0 +1,232 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.gms.wallet.web;
++
++import android.app.Activity;
++import android.app.AlertDialog;
++import android.app.PendingIntent;
++import android.content.Context;
++import android.content.Intent;
++import android.os.Bundle;
++import android.os.Parcel;
++import android.os.Process;
++import android.os.Looper;
++import android.os.RemoteException;
++import com.google.android.gms.common.api.CommonStatusCodes;
++import com.google.android.gms.common.api.Status;
++import com.google.android.gms.wallet.GetClientTokenResponse;
++import com.google.android.gms.wallet.WebPaymentData;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
++import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.robolectric.Robolectric;
++import org.robolectric.RobolectricTestRunner;
++import org.robolectric.RuntimeEnvironment;
++import org.robolectric.android.controller.ActivityController;
++import org.robolectric.annotation.Config;
++import org.robolectric.shadows.ShadowAlertDialog;
++import org.microg.gms.wallet.OwServiceImpl;
++import android.os.IBinder;
++import static org.junit.Assert.*;
++import static org.robolectric.Shadows.shadowOf;
++
++@RunWith(RobolectricTestRunner.class)
++@Config(sdk = 28)
++public class WebPaymentBridgeTest {
++    private final Context context = RuntimeEnvironment.getApplication();
++
++    private static final class Callback extends IWalletServiceCallbacks.Stub {
++        Status status;
++        int calls;
++        @Override public void onIsReadyToPayResponse(Status s, boolean r, Bundle b) { fail(); }
++        @Override public void onClientTokenReceived(Status s, GetClientTokenResponse r, Bundle b) { fail(); }
++        boolean disconnected;
++        @Override public void onWebPaymentDataLoaded(Status s, WebPaymentData d, Bundle b) throws RemoteException {
++            calls++;
++            status = s;
++            assertNull(d);
++            assertTrue(b.isEmpty());
++            if (disconnected) throw new RemoteException("Synthetic callback death");
++        }
++    }
++
++    // SDK-shaped fixture: the provider does not construct the source request.
++    private static WebPaymentDataRequest request(String origin, String json) {
++        Parcel out = Parcel.obtain();
++        try {
++            out.writeInt(0xffff4f45); out.writeInt(0);
++            field(out, 3, origin);
++            field(out, 4, json);
++            out.writeInt((4 << 16) | 7); out.writeInt(1);
++            int end = out.dataPosition();
++            out.setDataPosition(4); out.writeInt(end - 8); out.setDataPosition(0);
++            return WebPaymentDataRequest.CREATOR.createFromParcel(out);
++        } finally { out.recycle(); }
++    }
++
++    private static void field(Parcel out, int id, String value) {
++        out.writeInt(0xffff0000 | id); out.writeInt(0);
++        int start = out.dataPosition(); out.writeString(value); int end = out.dataPosition();
++        out.setDataPosition(start - 4); out.writeInt(end - start); out.setDataPosition(end);
++    }
++
++    private Callback load(WebPaymentDataRequest request, Bundle options) throws RemoteException {
++        Callback callback = new Callback();
++        new WebPaymentBridge(context, Process.myUid(), context.getPackageName()).load(request, options, callback);
++        assertEquals(1, callback.calls);
++        return callback;
++    }
++
++    private Intent resolutionIntent() throws RemoteException {
++        Status status = load(request("https://merchant.example", "{\"apiVersion\":2}"), Bundle.EMPTY).status;
++        assertEquals(CommonStatusCodes.RESOLUTION_REQUIRED, status.getStatusCode());
++        assertTrue(status.hasResolution());
++        return shadowOf(status.getResolution()).getSavedIntent();
++    }
++
++    @Test public void validRequestGetsAnExplicitImmutableOneShotResolution() throws Exception {
++        Callback callback = load(request("https://merchant.example", "{\"apiVersion\":2}"), Bundle.EMPTY);
++        PendingIntent pending = callback.status.getResolution();
++        assertNotNull(pending);
++        int flags = shadowOf(pending).getFlags();
++        assertTrue((flags & PendingIntent.FLAG_IMMUTABLE) != 0);
++        assertTrue((flags & PendingIntent.FLAG_ONE_SHOT) != 0);
++        Intent intent = shadowOf(pending).getSavedIntent();
++        assertEquals(WebPaymentActivity.class.getName(), intent.getComponent().getClassName());
++        WebPaymentDataRequest preserved = intent.getParcelableExtra(WebPaymentBridge.REQUEST);
++        assertEquals("https://merchant.example", preserved.getMerchantOrigin());
++        assertEquals("{\"apiVersion\":2}", preserved.getWalletParameters());
++        assertEquals(context.getPackageName(), intent.getStringExtra(WebPaymentBridge.CALLER));
++    }
++
++    @Test public void separateRequestsCannotOverwriteEachOthersPendingIntent() throws Exception {
++        Intent first = resolutionIntent();
++        Intent second = resolutionIntent();
++        assertNotEquals(first.getData(), second.getData());
++    }
++
++    @Test public void malformedOriginsAndJsonFailWithoutAResolution() throws Exception {
++        String[] badOrigins = {null, "http://merchant.example", "https://user@merchant.example", "https://merchant.example/path", "https://merchant.example?x=1", "https://merchant.example#fragment", "https://merchant.example:0"};
++        for (String origin : badOrigins) {
++            Status status = load(request(origin, "{}"), Bundle.EMPTY).status;
++            assertEquals(CommonStatusCodes.DEVELOPER_ERROR, status.getStatusCode());
++            assertFalse(status.hasResolution());
++        }
++        assertEquals(CommonStatusCodes.DEVELOPER_ERROR,
++                load(request("https://merchant.example", "not-json"), Bundle.EMPTY).status.getStatusCode());
++    }
++
++    @Test public void forgedOptionsCannotChangeTheVerifiedPackage() throws Exception {
++        Bundle options = new Bundle(); options.putString("androidPackageName", "another.package");
++        Status status = load(request("https://merchant.example", "{}"), options).status;
++        assertEquals(CommonStatusCodes.DEVELOPER_ERROR, status.getStatusCode());
++        assertFalse(status.hasResolution());
++    }
++
++    @Test public void aBinderHandleCannotBeReusedByAnotherUid() throws Exception {
++        Callback callback = new Callback();
++        try {
++            new WebPaymentBridge(context, Process.myUid() + 1, context.getPackageName())
++                    .load(request("https://merchant.example", "{}"), Bundle.EMPTY, callback);
++            fail("Expected UID rejection");
++        } catch (SecurityException expected) { assertEquals(0, callback.calls); }
++    }
++
++    @Test public void errorUiReturnsBothSdkAndLegacyErrorFormats() throws Exception {
++        try (ActivityController<WebPaymentActivity> controller = Robolectric.buildActivity(WebPaymentActivity.class, resolutionIntent()).setup()) {
++            AlertDialog dialog = ShadowAlertDialog.getLatestAlertDialog();
++            assertNotNull(dialog);
++            dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick();
++            shadowOf(Looper.getMainLooper()).idle();
++            WebPaymentActivity activity = controller.get();
++            assertTrue(activity.isFinishing());
++            assertEquals(Activity.RESULT_FIRST_USER, shadowOf(activity).getResultCode());
++            Intent result = shadowOf(activity).getResultIntent();
++            Status status = result.getParcelableExtra(WebPaymentResults.STATUS);
++            assertEquals(CommonStatusCodes.API_NOT_CONNECTED, status.getStatusCode());
++            assertEquals(CommonStatusCodes.API_NOT_CONNECTED, result.getIntExtra(WebPaymentResults.ERROR_CODE, -1));
++            assertFalse(result.hasExtra("com.google.android.gms.wallet.WebPaymentData"));
++        }
++    }
++
++    @Test public void cancellationDoesNotTurnIntoSuccess() throws Exception {
++        try (ActivityController<WebPaymentActivity> controller = Robolectric.buildActivity(WebPaymentActivity.class, resolutionIntent()).setup()) {
++            ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick();
++            shadowOf(Looper.getMainLooper()).idle();
++            assertEquals(Activity.RESULT_CANCELED, shadowOf(controller.get()).getResultCode());
++            Status result = shadowOf(controller.get()).getResultIntent().getParcelableExtra(WebPaymentResults.STATUS);
++            assertEquals(CommonStatusCodes.CANCELED, result.getStatusCode());
++        }
++    }
++
++    @Test public void expiredRequestCompletesWithTimeoutInsteadOfOpeningUi() throws Exception {
++        Intent intent = resolutionIntent().putExtra(WebPaymentBridge.EXPIRES, 0L);
++        try (ActivityController<WebPaymentActivity> controller = Robolectric.buildActivity(WebPaymentActivity.class, intent).create()) {
++            assertTrue(controller.get().isFinishing());
++            Status result = shadowOf(controller.get()).getResultIntent().getParcelableExtra(WebPaymentResults.STATUS);
++            assertEquals(CommonStatusCodes.TIMEOUT, result.getStatusCode());
++        }
++    }
++
++    @Test public void aSuccessOrResolutionStatusCannotBecomeATerminalErrorResult() {
++        try { WebPaymentResults.error(Status.SUCCESS); fail(); } catch (IllegalArgumentException expected) {}
++        PendingIntent intent = PendingIntent.getActivity(context, 42, new Intent("test"), PendingIntent.FLAG_IMMUTABLE);
++        try { WebPaymentResults.error(new Status(CommonStatusCodes.RESOLUTION_REQUIRED, "ui", intent)); fail(); }
++        catch (IllegalArgumentException expected) {}
++    }
++
++    @Test public void actualServiceDispatchesSdkTransaction17ToNativeResolution() throws Exception {
++        OwServiceImpl service = new OwServiceImpl(context, Process.myUid(), context.getPackageName());
++        Callback callback = new Callback();
++        Parcel data = Parcel.obtain();
++        try {
++            data.writeInterfaceToken("com.google.android.gms.wallet.internal.IOwService");
++            data.writeInt(1);
++            request("https://merchant.example", "{\"apiVersion\":2}").writeToParcel(data, 0);
++            data.writeInt(1); new Bundle().writeToParcel(data, 0);
++            data.writeStrongBinder(callback.asBinder());
++            assertTrue(service.transact(17, data, null, IBinder.FLAG_ONEWAY));
++            assertEquals(1, callback.calls);
++            assertEquals(CommonStatusCodes.RESOLUTION_REQUIRED, callback.status.getStatusCode());
++            assertNotNull(callback.status.getResolution());
++        } finally { data.recycle(); }
++    }
++
++    @Test public void serviceDoesNotAdvertiseReadinessWithoutAPaymentBackend() throws Exception {
++        boolean[] called = {false};
++        new OwServiceImpl(context, Process.myUid(), context.getPackageName()).isReadyToPay(null, Bundle.EMPTY,
++                new IWalletServiceCallbacks.Stub() {
++                    @Override public void onIsReadyToPayResponse(Status status, boolean ready, Bundle extras) {
++                        assertTrue(status.isSuccess()); assertFalse(ready); called[0] = true;
++                    }
++                    @Override public void onClientTokenReceived(Status s, GetClientTokenResponse r, Bundle b) { fail(); }
++                    @Override public void onWebPaymentDataLoaded(Status s, WebPaymentData d, Bundle b) { fail(); }
++                });
++        assertTrue(called[0]);
++    }
++
++    @Test public void aDeadCallbackRevokesItsUnusedResolution() throws Exception {
++        Callback callback = new Callback(); callback.disconnected = true;
++        try {
++            new WebPaymentBridge(context, Process.myUid(), context.getPackageName())
++                    .load(request("https://merchant.example", "{}"), Bundle.EMPTY, callback);
++            fail();
++        } catch (RemoteException expected) {
++            assertEquals(1, callback.calls);
++            try { callback.status.getResolution().send(); fail("Resolution should be cancelled"); }
++            catch (PendingIntent.CanceledException cancelled) {}
++        }
++    }
++
++    @Test public void malformedActivityInputCannotFallThroughToSuccess() {
++        Intent intent = new Intent(context, WebPaymentActivity.class)
++                .putExtra(WebPaymentBridge.EXPIRES, Long.MAX_VALUE)
++                .putExtra(WebPaymentBridge.CALLER, context.getPackageName());
++        try (ActivityController<WebPaymentActivity> controller = Robolectric.buildActivity(WebPaymentActivity.class, intent).create()) {
++            assertTrue(controller.get().isFinishing());
++            assertEquals(Activity.RESULT_FIRST_USER, shadowOf(controller.get()).getResultCode());
++            Status status = shadowOf(controller.get()).getResultIntent().getParcelableExtra(WebPaymentResults.STATUS);
++            assertEquals(CommonStatusCodes.DEVELOPER_ERROR, status.getStatusCode());
++        }
++    }
++}
+diff --git a/wallet-web-harness/build.gradle b/wallet-web-harness/build.gradle
+new file mode 100644
+index 0000000..ad9acf7
+--- /dev/null
++++ b/wallet-web-harness/build.gradle
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++apply plugin: 'com.android.application'
++
++android {
++    namespace 'org.microg.wallet.lab'
++    compileSdkVersion androidCompileSdk
++    buildToolsVersion "$androidBuildVersionTools"
++    defaultConfig {
++        applicationId 'org.microg.wallet.lab'
++        minSdkVersion 23
++        targetSdkVersion 31
++        versionCode 1
++        versionName '0.1-protocol-only'
++    }
++    compileOptions {
++        sourceCompatibility = 1.8
++        targetCompatibility = 1.8
++    }
++}
++dependencies { implementation project(':wallet-web-core') }
+diff --git a/wallet-web-harness/src/main/AndroidManifest.xml b/wallet-web-harness/src/main/AndroidManifest.xml
+new file mode 100644
+index 0000000..dc1676b
+--- /dev/null
++++ b/wallet-web-harness/src/main/AndroidManifest.xml
+@@ -0,0 +1,11 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
++    <application android:label="Wallet flow lab" android:allowBackup="false"
++        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
++        <activity android:name="org.microg.wallet.lab.HarnessActivity" android:exported="true">
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++                <category android:name="android.intent.category.LAUNCHER" />
++            </intent-filter>
++        </activity>
++    </application>
++</manifest>
+diff --git a/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessActivity.java b/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessActivity.java
+new file mode 100644
+index 0000000..c99cd98
+--- /dev/null
++++ b/wallet-web-harness/src/main/java/org/microg/wallet/lab/HarnessActivity.java
+@@ -0,0 +1,100 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package org.microg.wallet.lab;
++
++import android.app.Activity;
++import android.content.Intent;
++import android.os.Bundle;
++import android.os.IBinder;
++import android.os.Parcel;
++import android.os.Process;
++import android.os.RemoteException;
++import android.widget.Button;
++import android.widget.LinearLayout;
++import android.widget.TextView;
++import com.google.android.gms.common.api.CommonStatusCodes;
++import com.google.android.gms.common.api.Status;
++import com.google.android.gms.wallet.GetClientTokenRequest;
++import com.google.android.gms.wallet.GetClientTokenResponse;
++import com.google.android.gms.wallet.IsReadyToPayRequest;
++import com.google.android.gms.wallet.WebPaymentData;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
++import com.google.android.gms.wallet.internal.IOwService;
++import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
++import org.microg.gms.wallet.OwServiceImpl;
++import org.microg.gms.wallet.web.WebPaymentResults;
++import java.io.FileOutputStream;
++import java.nio.charset.StandardCharsets;
++
++/** Exercises the real bridge through Binder 17 without touching installed GMS. */
++public final class HarnessActivity extends Activity {
++    private TextView output;
++    private String text = "This is an offline protocol test. No Google account or network access is requested.\n";
++
++    @Override public void onCreate(Bundle state) {
++        super.onCreate(state);
++        if (state != null) text = state.getString("output", text);
++        LinearLayout layout = new LinearLayout(this);
++        layout.setOrientation(LinearLayout.VERTICAL);
++        int padding = (int) (20 * getResources().getDisplayMetrics().density);
++        layout.setPadding(padding, padding, padding, padding);
++        output = new TextView(this); output.setText(text); layout.addView(output);
++        Button button = new Button(this); button.setText("Test native UI and return flow");
++        button.setOnClickListener(view -> runTest()); layout.addView(button);
++        setContentView(layout);
++    }
++
++    @Override protected void onSaveInstanceState(Bundle state) {
++        state.putString("output", text);
++        super.onSaveInstanceState(state);
++    }
++
++    private void event(String line) {
++        text += line + "\n"; output.setText(text);
++        try (FileOutputStream stream = openFileOutput("events.txt", MODE_APPEND)) {
++            stream.write((line + "\n").getBytes(StandardCharsets.UTF_8));
++        } catch (Exception ignored) {}
++    }
++
++    private void runTest() {
++        IOwService.Stub service = new OwServiceImpl(this, Process.myUid(), getPackageName());
++        IWalletServiceCallbacks callback = new IWalletServiceCallbacks.Stub() {
++            @Override public void onIsReadyToPayResponse(Status s, boolean r, Bundle b) {}
++            @Override public void onClientTokenReceived(Status s, GetClientTokenResponse r, Bundle b) {}
++            @Override public void onWebPaymentDataLoaded(Status status, WebPaymentData data, Bundle extras) {
++                event("CALLBACK transaction=12 status=" + status.getStatusCode() + " paymentData=" + (data != null));
++                if (status.getStatusCode() == CommonStatusCodes.RESOLUTION_REQUIRED && status.hasResolution()) {
++                    try { startIntentSenderForResult(status.getResolution().getIntentSender(), 17, null, 0, 0, 0); }
++                    catch (Exception exception) { event("LAUNCH_FAILED " + exception.getClass().getSimpleName()); }
++                }
++            }
++        };
++        Parcel request = Parcel.obtain();
++        try {
++            request.writeInterfaceToken("com.google.android.gms.wallet.internal.IOwService");
++            request.writeInt(1);
++            int header = request.dataPosition(); request.writeInt(0xffff4f45); request.writeInt(0);
++            string(request, 3, "https://merchant.example");
++            string(request, 4, "{\"apiVersion\":2,\"environment\":\"TEST\"}");
++            int end = request.dataPosition(); request.setDataPosition(header + 4); request.writeInt(end - header - 8); request.setDataPosition(end);
++            request.writeInt(1); new Bundle().writeToParcel(request, 0);
++            request.writeStrongBinder(callback.asBinder());
++            event("REQUEST transaction=17");
++            service.transact(17, request, null, IBinder.FLAG_ONEWAY);
++        } catch (Exception exception) { event("REQUEST_FAILED " + exception.getClass().getSimpleName()); }
++        finally { request.recycle(); }
++    }
++
++    private static void string(Parcel out, int id, String value) {
++        out.writeInt(0xffff0000 | id); out.writeInt(0); int start = out.dataPosition();
++        out.writeString(value); int end = out.dataPosition(); out.setDataPosition(start - 4);
++        out.writeInt(end - start); out.setDataPosition(end);
++    }
++
++    @Override protected void onActivityResult(int request, int result, Intent data) {
++        super.onActivityResult(request, result, data);
++        if (request != 17) return;
++        Status status = data == null ? null : data.getParcelableExtra(WebPaymentResults.STATUS);
++        event("RESULT activity=" + result + " status=" + (status == null ? "none" : status.getStatusCode()));
++        if (result == RESULT_OK) event("UNEXPECTED_OK: no backend should return success");
++    }
++}

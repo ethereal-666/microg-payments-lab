@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.microg.wallet.authprobe.AuthProbeReportTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-27T04:53:56.031Z" hostname="Arch" time="0.918">
+  <properties/>
+  <testcase name="serverErrorMessagesAreNotCopiedIntoReports" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.882"/>
+  <testcase name="exceptionMessagesCannotLeakAccountOrTokenData" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.014"/>
+  <testcase name="tokenAndAccountNeverEnterTheDiagnostic" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.011"/>
+  <testcase name="emptyTokenDoesNotCountAsAuthorized" classname="org.microg.wallet.authprobe.AuthProbeReportTest" time="0.01"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

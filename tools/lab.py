@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Reproduce protocol checks and summarize bounded native-loader experiments."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 
@@ -53,18 +55,43 @@ def verify(checkout, java_home):
         env["JAVA_HOME"] = str(java_home.resolve())
     command = [str(checkout / "gradlew"), "--no-daemon", "--no-configuration-cache",
                ":play-services-api:testDebugUnitTest", "--tests",
-               "org.microg.gms.wallet.WebPaymentWireTest"]
+               "org.microg.gms.wallet.WebPaymentWireTest",
+               ":wallet-web-core:testDebugUnitTest", ":wallet-auth-probe:testDebugUnitTest",
+               ":wallet-web-harness:assembleDebug", ":wallet-auth-probe:assembleDebug"]
     subprocess.run(command, cwd=checkout, env=env, check=True)
-    report = checkout / "play-services-api/build/test-results/testDebugUnitTest/TEST-org.microg.gms.wallet.WebPaymentWireTest.xml"
-    suite = ET.parse(report).getroot()
-    summary = {k: suite.attrib[k] for k in ("name", "tests", "failures", "errors", "skipped", "time")}
-    if int(summary["tests"]) < 5 or any(int(summary[k]) for k in ("failures", "errors", "skipped")):
-        raise ValueError("Protocol suite did not pass every required test")
     target = ROOT / "verification"
     target.mkdir(exist_ok=True)
-    (target / report.name).write_bytes(report.read_bytes())
-    (target / "protocol-test-result.json").write_text(json.dumps(summary, indent=2) + "\n")
-    return summary
+    summaries = {}
+    suites = [("protocol", "play-services-api", "org.microg.gms.wallet.WebPaymentWireTest", 5),
+              ("native_flow", "wallet-web-core", "org.microg.gms.wallet.web.WebPaymentBridgeTest", 13),
+              ("auth_diagnostics", "wallet-auth-probe", "org.microg.wallet.authprobe.AuthProbeReportTest", 4)]
+    for name, module, test_class, minimum in suites:
+        report = checkout / module / "build/test-results/testDebugUnitTest" / ("TEST-" + test_class + ".xml")
+        suite = ET.parse(report).getroot()
+        summary = {k: suite.attrib[k] for k in ("name", "tests", "failures", "errors", "skipped", "time")}
+        if int(summary["tests"]) < minimum or any(int(summary[k]) for k in ("failures", "errors", "skipped")):
+            raise ValueError(name + " suite did not pass every required test")
+        (target / report.name).write_bytes(report.read_bytes())
+        summaries[name] = summary
+    (target / "protocol-test-result.json").write_text(json.dumps(summaries["protocol"], indent=2) + "\n")
+    artifact_dir = ROOT / "artifacts"
+    artifact_dir.mkdir(exist_ok=True)
+    artifacts = []
+    for module in ("wallet-web-harness", "wallet-auth-probe"):
+        folder = checkout / module / "build/outputs/apk/debug"
+        metadata = json.loads((folder / "output-metadata.json").read_text())
+        apk = folder / metadata["elements"][0]["outputFile"]
+        destination = artifact_dir / apk.name
+        shutil.copy2(apk, destination)
+        artifacts.append({"path": str(destination.relative_to(ROOT)),
+                          "application_id": metadata["applicationId"],
+                          "sha256": hashlib.sha256(destination.read_bytes()).hexdigest(),
+                          "bytes": destination.stat().st_size})
+    (target / "artifacts.json").write_text(json.dumps(artifacts, indent=2) + "\n")
+    result = {"suites": summaries, "total_tests": sum(int(x["tests"]) for x in summaries.values()),
+              "payment_verified": False, "scope": "Unit tests and APK builds; phone verification pending"}
+    (target / "native-flow-result.json").write_text(json.dumps(result, indent=2) + "\n")
+    return result
 
 
 def main():

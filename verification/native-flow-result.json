@@ -1,0 +1,31 @@
+{
+  "suites": {
+    "protocol": {
+      "name": "org.microg.gms.wallet.WebPaymentWireTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.065"
+    },
+    "native_flow": {
+      "name": "org.microg.gms.wallet.web.WebPaymentBridgeTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.727"
+    },
+    "auth_diagnostics": {
+      "name": "org.microg.wallet.authprobe.AuthProbeReportTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.918"
+    }
+  },
+  "total_tests": 22,
+  "payment_verified": false,
+  "scope": "Unit tests and APK builds; phone verification pending"
+}

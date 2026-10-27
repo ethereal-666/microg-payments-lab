@@ -1,0 +1,6 @@
+{
+  "fresh_patch_applied": true,
+  "repeat_is_idempotent": true,
+  "patch_sha256": "7cdfa5fc4518182163e6245c7acf500dd5803109c64b0b893982ae21e75d523c",
+  "tested_source_diff_matches": true
+}

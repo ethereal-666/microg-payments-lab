@@ -42,7 +42,8 @@ def prepare(checkout, project_root=ROOT, sdk=None):
     if already_applied:
         # The patch may apply in reverse even when unrelated user edits exist.
         # Reuse only the exact intended diff, and never reset any edits.
-        difference = git(checkout, "diff", "--binary", "HEAD").stdout
+        # Canonical add/delete form also covers sources moved across modules.
+        difference = git(checkout, "diff", "--binary", "--no-renames", "HEAD").stdout
         untracked = git(checkout, "ls-files", "--others", "--exclude-standard").stdout
         if difference != patch_text or untracked:
             raise ValueError("Additional checkout changes found; preserving them without modification")
