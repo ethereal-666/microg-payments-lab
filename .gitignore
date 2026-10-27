@@ -1,0 +1,27 @@
+# Keep the project shareable without vendoring APKs, decompiled Google code,
+# downloaded SDKs, nested upstream checkouts, signing keys or build outputs.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/LICENSE
+!/ROADMAP.md
+!/project.json
+!/tools/
+!/patches/
+!/research/
+/research/*
+!/research/*.json
+!/native-port-probe/
+/native-port-probe/*
+!/native-port-probe/AndroidManifest.xml
+!/native-port-probe/ProbeActivity.java
+!/native-port-probe/build.py
+!/verification/
+/verification/*
+!/verification/protocol-test-result.json
+!/verification/TEST-org.microg.gms.wallet.WebPaymentWireTest.xml
+!/verification/native-probe-first.txt
+!/verification/native-probe-context-initialized.txt
+__pycache__/
+*.pyc

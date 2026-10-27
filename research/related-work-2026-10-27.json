@@ -1,0 +1,60 @@
+{
+  "as_of": "2026-10-27",
+  "scope": "Public implementations of native Chrome online Google Pay with microG on Huawei Android-compatible firmware",
+  "conclusion": "No complete publicly verifiable implementation found in this search; related partial and adjacent work exists. This does not prove no implementation exists.",
+  "method": "Web search; GitHub repository and issue/PR metadata searches; upstream/ReVanced wallet source retrieval; review of primary project documentation. Not an exhaustive code/fork audit.",
+  "sources": [
+    {
+      "name": "microG wallet support",
+      "url": "https://github.com/microg/GmsCore/issues/361",
+      "category": "upstream_request",
+      "finding": "Open support request; largely NFC/Android Pay context, not proof of all web-payment limitations."
+    },
+    {
+      "name": "microG IAP security verification",
+      "url": "https://github.com/microg/GmsCore/pull/3507",
+      "category": "partial_implementation",
+      "finding": "Merged IAP security verification and related native UI; not a Chrome web-payment provider."
+    },
+    {
+      "name": "microG current wallet source",
+      "url": "https://github.com/microg/GmsCore/blob/master/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java",
+      "category": "source_inspected",
+      "finding": "isReadyToPay returns false; getClientToken returns internal error; loadWebPaymentData absent."
+    },
+    {
+      "name": "ReVanced wallet source",
+      "url": "https://github.com/ReVanced/GmsCore/blob/master/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java",
+      "category": "source_inspected",
+      "finding": "Fetched file identical to current upstream stub at research time."
+    },
+    {
+      "name": "microG Play Store/Integrity workarounds",
+      "url": "https://github.com/D3SOX/microg-play-store-workarounds",
+      "category": "adjacent_work",
+      "finding": "Rooted Android 13+ custom ROM attestation, Store privileges and provenance; does not implement wallet payments."
+    },
+    {
+      "name": "Google Pay India app allowance",
+      "url": "https://github.com/microg/GmsCore/pull/1112",
+      "category": "different_payment_product",
+      "finding": "App compatibility change; not evidence of global card-based Google Pay provider."
+    },
+    {
+      "name": "Google merchant Android sample",
+      "url": "https://github.com/google-pay/android-quickstart",
+      "category": "merchant_integration",
+      "finding": "Calls Google Play services; does not replace the device payment provider."
+    },
+    {
+      "name": "GrapheneOS sandboxed Play",
+      "url": "https://grapheneos.org/features#sandboxed-google-play",
+      "category": "alternative_architecture",
+      "finding": "OS-integrated compatibility layer for original Google packages; not a drop-in microG backend."
+    }
+  ],
+  "retrieved_source_sha256": {
+    "upstream-wallet": "506d1cd2ad58faba2b8c7a4d41bf2010b7190e32508fa810409ecf4c6efc976f",
+    "revanced-wallet": "506d1cd2ad58faba2b8c7a4d41bf2010b7190e32508fa810409ecf4c6efc976f"
+  }
+}

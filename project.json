@@ -1,0 +1,33 @@
+{
+  "name": "microg-payments-lab",
+  "status": "experimental_protocol_foundation",
+  "payment_working": false,
+  "scope": "Chrome online Google Pay on Android-compatible Huawei firmware",
+  "device_baseline": {
+    "model": "Huawei Pura 70",
+    "system": "HarmonyOS 4.2.0.242",
+    "android_sdk": 31,
+    "microg": "0.3.16.252432-hw"
+  },
+  "upstream": {
+    "url": "https://github.com/microg/GmsCore",
+    "ref": "v0.3.17.252432",
+    "commit": "32bc8954ff872d0e1a05ddfae81561b6dbecef69"
+  },
+  "protocol_reference": "Google Wallet SDK 20.0.0",
+  "next_gate": "Establish an authenticated TEST payment initialization and result flow",
+  "not_implemented": [
+    "Google-backed web payment initialization and token acquisition",
+    "Production payment UI and authorization",
+    "Chrome-to-provider end-to-end payment",
+    "NFC / tap-and-pay",
+    "HarmonyOS NEXT native applications"
+  ],
+  "protocol_tests": {
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "scope": "ABI and callback round trips only; no on-device payment verification"
+  }
+}

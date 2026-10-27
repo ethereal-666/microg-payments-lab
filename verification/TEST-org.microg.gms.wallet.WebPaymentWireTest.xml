@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.microg.gms.wallet.WebPaymentWireTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-27T04:06:54.088Z" hostname="Arch" time="1.065">
+  <properties/>
+  <testcase name="requestParserPreservesTheFollowingBinderArguments" classname="org.microg.gms.wallet.WebPaymentWireTest" time="1.004"/>
+  <testcase name="callback12PreservesNativeUiResolutionWithoutPaymentData" classname="org.microg.gms.wallet.WebPaymentWireTest" time="0.02"/>
+  <testcase name="chromeTransaction17DispatchesWithoutASynchronousReply" classname="org.microg.gms.wallet.WebPaymentWireTest" time="0.018"/>
+  <testcase name="callback12ContainsAnErrorAndNoPaymentCredential" classname="org.microg.gms.wallet.WebPaymentWireTest" time="0.011"/>
+  <testcase name="cartRetainsMultipleSdkLineItemsAndUnknownFields" classname="org.microg.gms.wallet.WebPaymentWireTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

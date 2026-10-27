@@ -1,0 +1,35 @@
+HOST sdk=31; isolated package; no permissions
+PAYLOAD version=24.40.34 (190400-682300402) minSdk=31
+BASE_CONTEXT_OK Google singleton initialized with isolated host context
+LINK_OK com.google.android.gms.wallet.WebPaymentDataRequest parent=com.google.android.gms.common.internal.safeparcel.AbstractSafeParcelable
+LINK_OK com.google.android.gms.wallet.service.PaymentChimeraService parent=bqfk
+CONSTRUCT_FAIL com.google.android.gms.wallet.service.PaymentChimeraService
+CAUSE java.lang.reflect.InvocationTargetException: null
+ AT java.lang.reflect.Constructor.newInstance0(Native Method)
+ AT java.lang.reflect.Constructor.newInstance(Constructor.java:343)
+ AT org.local.walletcompatprobe.ProbeActivity.probe(ProbeActivity.java:84)
+ AT org.local.walletcompatprobe.ProbeActivity.$r8$lambda$Ti8Yx80mjOWNgd-bGGPhffCBDBg(Unknown Source:0)
+CAUSE java.lang.ExceptionInInitializerError: null
+ AT bqfk.<init>(:com.google.android.gms@244034029@24.40.34 (190400-682300402):13)
+ AT bqfk.<init>(:com.google.android.gms@244034029@24.40.34 (190400-682300402):4)
+ AT bqfk.<init>(:com.google.android.gms@244034029@24.40.34 (190400-682300402):2)
+ AT com.google.android.gms.wallet.service.PaymentChimeraService.<init>(:com.google.android.gms@244034029@24.40.34 (190400-682300402):10)
+CAUSE java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Class java.lang.Object.getClass()' on a null object reference
+ AT evfw.A(:com.google.android.gms@244034029@24.40.34 (190400-682300402):1)
+ AT odv.a(:com.google.android.gms@244034029@24.40.34 (190400-682300402):3)
+ AT com.google.android.chimera.config.ModuleManager.<init>(:com.google.android.gms@244034029@24.40.34 (190400-682300402):4)
+ AT com.google.android.chimera.config.ModuleManager.get(:com.google.android.gms@244034029@24.40.34 (190400-682300402):3)
+LINK_OK com.google.android.gms.wallet.ib.IbChimeraActivity parent=dudp
+LINK_OK com.google.android.gms.wallet.ow.RootChimeraActivity parent=ocz
+LINK_FAIL com.google.android.gms.wallet.bender3.impl.GenericDelegatorChimeraActivityX
+CAUSE java.lang.ClassNotFoundException: com.google.android.gms.wallet.bender3.impl.GenericDelegatorChimeraActivityX
+ AT java.lang.Class.classForName(Native Method)
+ AT java.lang.Class.forName(Class.java:454)
+ AT org.local.walletcompatprobe.ProbeActivity.probe(ProbeActivity.java:80)
+ AT org.local.walletcompatprobe.ProbeActivity.$r8$lambda$Ti8Yx80mjOWNgd-bGGPhffCBDBg(Unknown Source:0)
+CAUSE java.lang.ClassNotFoundException: Didn't find class "com.google.android.gms.wallet.bender3.impl.GenericDelegatorChimeraActivityX" on path: DexPathList[[zip file "/storage/emulated/0/Android/data/org.local.walletcompatprobe/files/probe/gms.apk"],nativeLibraryDirectories=[/storage/emulated/0/Android/data/org.local.walletcompatprobe/files/probe/gms.apk!/lib/arm64-v8a, /system/lib64, /hw_product/lib64, /system/lib64/module/multimedia, /system/product/lib64]]
+ AT dalvik.system.BaseDexClassLoader.findClass(BaseDexClassLoader.java:218)
+ AT java.lang.ClassLoader.loadClass(ClassLoader.java:379)
+ AT java.lang.ClassLoader.loadClass(ClassLoader.java:312)
+ AT java.lang.Class.classForName(Native Method)
+PROBE_DONE; no account access, wallet requests or payment performed

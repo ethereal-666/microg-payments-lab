@@ -1,0 +1,30 @@
+[
+  {
+    "name": "upstream-wallet",
+    "url": "https://raw.githubusercontent.com/microg/GmsCore/master/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java",
+    "bytes": 2461,
+    "matches": [
+      "callbacks.onIsReadyToPayResponse(Status.SUCCESS, false, Bundle.EMPTY);",
+      "callbacks.onClientTokenReceived(Status.INTERNAL_ERROR, new GetClientTokenResponse(), Bundle.EMPTY);"
+    ]
+  },
+  {
+    "name": "revanced-wallet",
+    "url": "https://raw.githubusercontent.com/ReVanced/GmsCore/master/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java",
+    "bytes": 2461,
+    "matches": [
+      "callbacks.onIsReadyToPayResponse(Status.SUCCESS, false, Bundle.EMPTY);",
+      "callbacks.onClientTokenReceived(Status.INTERNAL_ERROR, new GetClientTokenResponse(), Bundle.EMPTY);"
+    ]
+  },
+  {
+    "name": "microg-re-wallet",
+    "url": "https://raw.githubusercontent.com/microG-RE/GmsCore/master/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "name": "integrity-workaround",
+    "url": "https://raw.githubusercontent.com/D3SOX/microg-play-store-workarounds/master/README.md",
+    "bytes": 12415
+  }
+]

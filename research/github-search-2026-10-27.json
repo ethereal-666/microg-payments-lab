@@ -1,0 +1,216 @@
+{
+  "repos_microg_wallet": {
+    "query": "microg wallet",
+    "total_count": 2,
+    "items": [
+      {
+        "name": "ajajaquil/arc-solar-microgrid",
+        "url": "https://github.com/ajajaquil/arc-solar-microgrid",
+        "description": "P2P solar micro-grid USDC settlement on Arc using ESP32 + Circle Wallets",
+        "state": null,
+        "updated_at": "2026-09-29T13:58:01Z"
+      },
+      {
+        "name": "matoslav/MicroGroove",
+        "url": "https://github.com/matoslav/MicroGroove",
+        "description": "A wallet-sized groovebox that turns $30 of hardware and a 3D printer into a four-track acid powerhouse | three mono/poly 303 voices, eight lanes of 808 & 909 drums, and a sampler that records the room or the machine itself. | M5Stack Cardputer-ADV | open source (MIT)",
+        "state": null,
+        "updated_at": "2026-10-24T12:56:38Z"
+      }
+    ]
+  },
+  "repos_microg_payment": {
+    "query": "microg payment",
+    "total_count": 5,
+    "items": [
+      {
+        "name": "NidhalxMRR/arc-microgrant",
+        "url": "https://github.com/NidhalxMRR/arc-microgrant",
+        "description": "SettlementRegistry: an on-chain payment receipt that cannot exist unless the payment did. Built for Circle Arc (gas token = USDC).",
+        "state": null,
+        "updated_at": "2026-09-21T07:43:36Z"
+      },
+      {
+        "name": "Agunggynastiar/microgig-zkp-platform",
+        "url": "https://github.com/Agunggynastiar/microgig-zkp-platform",
+        "description": "Blockchain freelance platform with Zero Knowledge Proof and escrow payment",
+        "state": null,
+        "updated_at": "2026-05-12T18:18:09Z"
+      },
+      {
+        "name": "blinkzprince5-lang/solar-microgrid-subscription",
+        "url": "https://github.com/blinkzprince5-lang/solar-microgrid-subscription",
+        "description": "A decentralized electricity access platform enabling households and businesses to subscribe to local solar microgrids through tokenized micro-payments on the Stacks blockchain.",
+        "state": null,
+        "updated_at": "2026-02-19T14:07:00Z"
+      },
+      {
+        "name": "SathvikRaoR/microgate-project",
+        "url": "https://github.com/SathvikRaoR/microgate-project",
+        "description": " AI Agent Payment System on Base Sepolia",
+        "state": null,
+        "updated_at": "2025-11-29T17:29:38Z"
+      },
+      {
+        "name": "udonwebdev/Microgig-platform",
+        "url": "https://github.com/udonwebdev/Microgig-platform",
+        "description": "\"A Flask web application for posting small jobs, with user accounts and payments.\"",
+        "state": null,
+        "updated_at": "2026-03-02T22:31:11Z"
+      }
+    ]
+  },
+  "repos_gms_wallet": {
+    "query": "GmsCore wallet",
+    "total_count": 0,
+    "items": []
+  },
+  "repos_gpay_provider": {
+    "query": "google pay microg",
+    "total_count": 0,
+    "items": []
+  },
+  "prs_payment": {
+    "query": "repo:microg/GmsCore is:pr (\"Google Pay\" OR \"web payment\" OR \"wallet\")",
+    "total_count": 13,
+    "items": [
+      {
+        "name": "[#3846] [com.mercadopago.wallet] Now impossible to log in due to facial r",
+        "url": "https://github.com/microg/GmsCore/pull/3907",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2026-10-23T13:37:59Z"
+      },
+      {
+        "name": "vision: report ML Kit face results in the input frame",
+        "url": "https://github.com/microg/GmsCore/pull/3899",
+        "description": null,
+        "state": "open",
+        "updated_at": "2026-10-19T02:45:48Z"
+      },
+      {
+        "name": "Fix #2851: [BOUNTY] Support Play Integrity over remote DroidG",
+        "url": "https://github.com/microg/GmsCore/pull/3787",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2026-09-09T20:01:08Z"
+      },
+      {
+        "name": "Wallet: Move parcelables from play-services-base to play-services-wallet",
+        "url": "https://github.com/microg/GmsCore/pull/3759",
+        "description": null,
+        "state": "open",
+        "updated_at": "2026-08-31T04:27:45Z"
+      },
+      {
+        "name": "Fix: [BOUNTY] RCS Support [14999$]",
+        "url": "https://github.com/microg/GmsCore/pull/3362",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2026-06-07T11:35:15Z"
+      },
+      {
+        "name": "Fix Consors bank app crash",
+        "url": "https://github.com/microg/GmsCore/pull/3263",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2026-05-28T06:47:46Z"
+      },
+      {
+        "name": "Implement RCS and Constellation services",
+        "url": "https://github.com/microg/GmsCore/pull/3347",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2026-03-23T06:23:17Z"
+      },
+      {
+        "name": "Fix missing methods that cause application ANR",
+        "url": "https://github.com/microg/GmsCore/pull/2925",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2025-07-14T01:58:54Z"
+      },
+      {
+        "name": "Fix the problem of not being able to bind a PayPal account",
+        "url": "https://github.com/microg/GmsCore/pull/2620",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2025-02-27T02:14:56Z"
+      },
+      {
+        "name": "Implement Play Integrity",
+        "url": "https://github.com/microg/GmsCore/pull/2077",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2024-12-18T12:17:50Z"
+      },
+      {
+        "name": "HMS Maps: Fix NullPointerException caused by idle listener",
+        "url": "https://github.com/microg/GmsCore/pull/2603",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2024-11-19T01:27:59Z"
+      },
+      {
+        "name": "Allow Google Pay India",
+        "url": "https://github.com/microg/GmsCore/pull/1112",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2021-06-09T13:36:34Z"
+      },
+      {
+        "name": "PackageUtils: Add Google Pay India version",
+        "url": "https://github.com/microg/GmsCore/pull/1079",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2020-07-31T20:02:17Z"
+      }
+    ]
+  },
+  "issues_webpay": {
+    "query": "repo:microg/GmsCore \"loadWebPaymentData\"",
+    "total_count": 0,
+    "items": []
+  },
+  "issues_binder17": {
+    "query": "repo:microg/GmsCore \"GmsWalletOwSvc\"",
+    "total_count": 5,
+    "items": [
+      {
+        "name": "Can't login with google with firebase button",
+        "url": "https://github.com/microg/GmsCore/issues/1162",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2022-05-18T07:33:39Z"
+      },
+      {
+        "name": "N26 actions tab loads forever",
+        "url": "https://github.com/microg/GmsCore/issues/1207",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2022-05-18T07:31:53Z"
+      },
+      {
+        "name": "Revolut top up credit does not work",
+        "url": "https://github.com/microg/GmsCore/issues/626",
+        "description": null,
+        "state": "closed",
+        "updated_at": "2022-05-10T12:42:35Z"
+      },
+      {
+        "name": "Google Pay/Wallet TapAndPay API calls prevent parts of banking apps (e.g. Vivid Money) from loading, issues related to isReadyToPay() already resolved",
+        "url": "https://github.com/microg/GmsCore/issues/1245",
+        "description": null,
+        "state": "open",
+        "updated_at": "2021-03-19T20:10:21Z"
+      },
+      {
+        "name": "Support for Google Assistant",
+        "url": "https://github.com/microg/GmsCore/issues/372",
+        "description": null,
+        "state": "open",
+        "updated_at": "2018-10-15T13:45:25Z"
+      }
+    ]
+  }
+}

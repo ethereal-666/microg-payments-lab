@@ -1,0 +1,489 @@
+diff --git a/play-services-api/build.gradle b/play-services-api/build.gradle
+index 56a39a3..6ecae78 100644
+--- a/play-services-api/build.gradle
++++ b/play-services-api/build.gradle
+@@ -44,6 +44,9 @@ dependencies {
+     api project(':play-services-phenotype')
+ 
+     annotationProcessor project(':safe-parcel-processor')
++
++    testImplementation 'junit:junit:4.13.2'
++    testImplementation 'org.robolectric:robolectric:4.14.1'
+ }
+ 
+ // build-tools 35.0.0 aidl.exe on Windows writes a `* Using: <full path>` header into generated
+diff --git a/play-services-api/src/main/aidl/com/google/android/gms/wallet/WebPaymentData.aidl b/play-services-api/src/main/aidl/com/google/android/gms/wallet/WebPaymentData.aidl
+new file mode 100644
+index 0000000..4064128
+--- /dev/null
++++ b/play-services-api/src/main/aidl/com/google/android/gms/wallet/WebPaymentData.aidl
+@@ -0,0 +1,3 @@
++package com.google.android.gms.wallet;
++
++parcelable WebPaymentData;
+diff --git a/play-services-api/src/main/aidl/com/google/android/gms/wallet/WebPaymentDataRequest.aidl b/play-services-api/src/main/aidl/com/google/android/gms/wallet/WebPaymentDataRequest.aidl
+new file mode 100644
+index 0000000..d6b7500
+--- /dev/null
++++ b/play-services-api/src/main/aidl/com/google/android/gms/wallet/WebPaymentDataRequest.aidl
+@@ -0,0 +1,3 @@
++package com.google.android.gms.wallet;
++
++parcelable WebPaymentDataRequest;
+diff --git a/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IOwService.aidl b/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IOwService.aidl
+index 4b5ac36..5fd5cd0 100644
+--- a/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IOwService.aidl
++++ b/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IOwService.aidl
+@@ -3,8 +3,10 @@ package com.google.android.gms.wallet.internal;
+ import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
+ import com.google.android.gms.wallet.IsReadyToPayRequest;
+ import com.google.android.gms.wallet.GetClientTokenRequest;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
+ 
+ interface IOwService {
+     void isReadyToPay(in IsReadyToPayRequest request, in Bundle args, IWalletServiceCallbacks callbacks) = 13;
+     void getClientToken(in GetClientTokenRequest getClientTokenRequest, in Bundle options, IWalletServiceCallbacks callbacks) = 14;
++    oneway void loadWebPaymentData(in WebPaymentDataRequest request, in Bundle options, IWalletServiceCallbacks callbacks) = 16;
+ }
+diff --git a/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IWalletServiceCallbacks.aidl b/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IWalletServiceCallbacks.aidl
+index a7bd289..0002c89 100644
+--- a/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IWalletServiceCallbacks.aidl
++++ b/play-services-api/src/main/aidl/com/google/android/gms/wallet/internal/IWalletServiceCallbacks.aidl
+@@ -2,8 +2,10 @@ package com.google.android.gms.wallet.internal;
+ 
+ import com.google.android.gms.common.api.Status;
+ import com.google.android.gms.wallet.GetClientTokenResponse;
++import com.google.android.gms.wallet.WebPaymentData;
+ 
+ interface IWalletServiceCallbacks {
+     void onIsReadyToPayResponse(in Status status, boolean result, in Bundle args) = 8;
+     void onClientTokenReceived(in Status status, in GetClientTokenResponse response, in Bundle extras) = 9;
++    oneway void onWebPaymentDataLoaded(in Status status, in WebPaymentData data, in Bundle extras) = 11;
+ }
+diff --git a/play-services-api/src/main/java/com/google/android/gms/wallet/Cart.java b/play-services-api/src/main/java/com/google/android/gms/wallet/Cart.java
+new file mode 100644
+index 0000000..95a5476
+--- /dev/null
++++ b/play-services-api/src/main/java/com/google/android/gms/wallet/Cart.java
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package com.google.android.gms.wallet;
++
++import org.microg.safeparcel.AutoSafeParcelable;
++import java.util.ArrayList;
++
++/** Legacy cart wire model used by Chrome's web-payment request. */
++public final class Cart extends AutoSafeParcelable {
++    @Field(2) private String totalPrice;
++    @Field(3) private String currencyCode;
++    @Field(4) private ArrayList<LineItem> lineItems = new ArrayList<>();
++
++    private Cart() {}
++
++    public String getTotalPrice() { return totalPrice; }
++    public String getCurrencyCode() { return currencyCode; }
++    public ArrayList<LineItem> getLineItems() { return lineItems; }
++
++    public static final Creator<Cart> CREATOR = new AutoCreator<>(Cart.class);
++}
+diff --git a/play-services-api/src/main/java/com/google/android/gms/wallet/LineItem.java b/play-services-api/src/main/java/com/google/android/gms/wallet/LineItem.java
+new file mode 100644
+index 0000000..d511298
+--- /dev/null
++++ b/play-services-api/src/main/java/com/google/android/gms/wallet/LineItem.java
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package com.google.android.gms.wallet;
++
++import org.microg.safeparcel.AutoSafeParcelable;
++
++/** Field layout follows the Wallet SDK 20.0.0 parcel contract. */
++public final class LineItem extends AutoSafeParcelable {
++    @Field(2) private String description;
++    @Field(3) private String quantity;
++    @Field(4) private String unitPrice;
++    @Field(5) private String totalPrice;
++    @Field(6) private int role;
++    @Field(7) private String currencyCode;
++
++    private LineItem() {}
++
++    public String getDescription() { return description; }
++    public String getQuantity() { return quantity; }
++    public String getUnitPrice() { return unitPrice; }
++    public String getTotalPrice() { return totalPrice; }
++    public int getRole() { return role; }
++    public String getCurrencyCode() { return currencyCode; }
++
++    public static final Creator<LineItem> CREATOR = new AutoCreator<>(LineItem.class);
++}
+diff --git a/play-services-api/src/main/java/com/google/android/gms/wallet/WebPaymentData.java b/play-services-api/src/main/java/com/google/android/gms/wallet/WebPaymentData.java
+new file mode 100644
+index 0000000..d51b9f2
+--- /dev/null
++++ b/play-services-api/src/main/java/com/google/android/gms/wallet/WebPaymentData.java
+@@ -0,0 +1,27 @@
++/*
++ * SPDX-FileCopyrightText: 2026 microG Project Team
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++package com.google.android.gms.wallet;
++
++import android.os.Bundle;
++
++import org.microg.safeparcel.AutoSafeParcelable;
++
++/** Wire representation only; unsupported payment calls never fabricate data. */
++public final class WebPaymentData extends AutoSafeParcelable {
++    @Field(2)
++    private String walletData;
++    @Field(3)
++    private Bundle savedState;
++
++    private WebPaymentData() {
++    }
++
++    public String getWalletData() { return walletData; }
++    public Bundle getSavedState() { return savedState; }
++
++    public static final Creator<WebPaymentData> CREATOR =
++            new AutoCreator<>(WebPaymentData.class);
++}
+diff --git a/play-services-api/src/main/java/com/google/android/gms/wallet/WebPaymentDataRequest.java b/play-services-api/src/main/java/com/google/android/gms/wallet/WebPaymentDataRequest.java
+new file mode 100644
+index 0000000..d710746
+--- /dev/null
++++ b/play-services-api/src/main/java/com/google/android/gms/wallet/WebPaymentDataRequest.java
+@@ -0,0 +1,44 @@
++/*
++ * SPDX-FileCopyrightText: 2026 microG Project Team
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++package com.google.android.gms.wallet;
++
++import android.os.Bundle;
++
++import org.microg.safeparcel.AutoSafeParcelable;
++
++/**
++ * Wire representation of the first-party web payment request.
++ *
++ * Retains the cart, merchant context and opaque parameters for a future backend.
++ * Deserializing this object does not authorize or process a payment.
++ */
++public final class WebPaymentDataRequest extends AutoSafeParcelable {
++    @Field(2)
++    private Cart cart;
++    @Field(3)
++    private String merchantOrigin;
++    @Field(4)
++    private String walletParameters;
++    @Field(5)
++    private Bundle savedState;
++    @Field(6)
++    private byte[] encryptedParameters;
++    @Field(7)
++    private boolean useChromiumPaymentDetailsUpdate;
++
++    private WebPaymentDataRequest() {
++    }
++
++    public Cart getCart() { return cart; }
++    public String getMerchantOrigin() { return merchantOrigin; }
++    public String getWalletParameters() { return walletParameters; }
++    public Bundle getSavedState() { return savedState; }
++    public byte[] getEncryptedParameters() { return encryptedParameters; }
++    public boolean getUseChromiumPaymentDetailsUpdate() { return useChromiumPaymentDetailsUpdate; }
++
++    public static final Creator<WebPaymentDataRequest> CREATOR =
++            new AutoCreator<>(WebPaymentDataRequest.class);
++}
+diff --git a/play-services-api/src/test/java/org/microg/gms/wallet/WebPaymentWireTest.java b/play-services-api/src/test/java/org/microg/gms/wallet/WebPaymentWireTest.java
+new file mode 100644
+index 0000000..31d3470
+--- /dev/null
++++ b/play-services-api/src/test/java/org/microg/gms/wallet/WebPaymentWireTest.java
+@@ -0,0 +1,245 @@
++/*
++ * SPDX-FileCopyrightText: 2026 microG Project Team
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++package org.microg.gms.wallet;
++
++import android.os.Binder;
++import android.os.Bundle;
++import android.os.IBinder;
++import android.os.IInterface;
++import android.os.Parcel;
++import android.os.RemoteException;
++import android.app.PendingIntent;
++import android.content.Intent;
++
++import com.google.android.gms.common.api.CommonStatusCodes;
++import com.google.android.gms.common.api.Status;
++import com.google.android.gms.wallet.GetClientTokenRequest;
++import com.google.android.gms.wallet.IsReadyToPayRequest;
++import com.google.android.gms.wallet.WebPaymentData;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
++import com.google.android.gms.wallet.LineItem;
++import com.google.android.gms.wallet.internal.IOwService;
++import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
++
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.robolectric.RobolectricTestRunner;
++import org.robolectric.annotation.Config;
++import org.robolectric.RuntimeEnvironment;
++
++import java.lang.reflect.Field;
++import java.util.concurrent.atomic.AtomicInteger;
++import java.util.function.Consumer;
++
++import static org.junit.Assert.*;
++
++/** Contract taken from Google's Wallet SDK 20.0.0, rather than AIDL constants. */
++@RunWith(RobolectricTestRunner.class)
++@Config(manifest = Config.NONE, sdk = 28)
++public class WebPaymentWireTest {
++    private static final String SERVICE = "com.google.android.gms.wallet.internal.IOwService";
++    private static final String CALLBACK = "com.google.android.gms.wallet.internal.IWalletServiceCallbacks";
++
++    // Write the SDK's SafeParcel framing directly, independently of microG's writer.
++    private static int beginVariable(Parcel out, int fieldId) {
++        out.writeInt(0xffff0000 | fieldId);
++        out.writeInt(0);
++        return out.dataPosition();
++    }
++
++    private static void finishVariable(Parcel out, int start) {
++        int end = out.dataPosition();
++        out.setDataPosition(start - 4);
++        out.writeInt(end - start);
++        out.setDataPosition(end);
++    }
++
++    private static void writeField(Parcel out, int id, Consumer<Parcel> writer) {
++        int start = beginVariable(out, id);
++        writer.accept(out);
++        finishVariable(out, start);
++    }
++
++    /** Includes legacy field 2 so a reader cannot accidentally consume outer IPC data. */
++    private static void writeSdkRequest(Parcel parcel) {
++        parcel.writeInt(1);
++        int start = beginVariable(parcel, 20293);
++        writeField(parcel, 2, out -> {
++            int cart = beginVariable(out, 20293);
++            writeField(out, 2, p -> p.writeString("1.00"));
++            writeField(out, 3, p -> p.writeString("USD"));
++            finishVariable(out, cart);
++        });
++        writeField(parcel, 3, p -> p.writeString("https://merchant.example"));
++        writeField(parcel, 4, p -> p.writeString("synthetic-wallet-parameters"));
++        Bundle saved = new Bundle();
++        saved.putString("saved", "state");
++        writeField(parcel, 5, p -> p.writeBundle(saved));
++        writeField(parcel, 6, p -> p.writeByteArray(new byte[] {1, 2, 3}));
++        parcel.writeInt((4 << 16) | 7);
++        parcel.writeInt(1);
++        writeField(parcel, 99, p -> p.writeString("future-field"));
++        finishVariable(parcel, start);
++    }
++
++    private static Object field(Object object, String name) throws Exception {
++        Field f = object.getClass().getDeclaredField(name);
++        f.setAccessible(true);
++        return f.get(object);
++    }
++
++    @Test public void requestParserPreservesTheFollowingBinderArguments() throws Exception {
++        Parcel parcel = Parcel.obtain();
++        try {
++            writeSdkRequest(parcel);
++            parcel.writeString("outer-argument-sentinel");
++            parcel.setDataPosition(0);
++            assertEquals(1, parcel.readInt());
++            WebPaymentDataRequest request = WebPaymentDataRequest.CREATOR.createFromParcel(parcel);
++            assertEquals("1.00", request.getCart().getTotalPrice());
++            assertEquals("USD", request.getCart().getCurrencyCode());
++            assertTrue(request.getCart().getLineItems().isEmpty());
++            assertEquals("https://merchant.example", field(request, "merchantOrigin"));
++            assertEquals("synthetic-wallet-parameters", field(request, "walletParameters"));
++            assertArrayEquals(new byte[] {1, 2, 3}, (byte[]) field(request, "encryptedParameters"));
++            assertEquals(true, field(request, "useChromiumPaymentDetailsUpdate"));
++            assertEquals("state", ((Bundle) field(request, "savedState")).getString("saved"));
++            assertEquals("outer-argument-sentinel", parcel.readString());
++            assertEquals(0, parcel.dataAvail());
++        } finally {
++            parcel.recycle();
++        }
++    }
++
++    @Test public void cartRetainsMultipleSdkLineItemsAndUnknownFields() throws Exception {
++        Parcel parcel = Parcel.obtain();
++        try {
++            int cart = beginVariable(parcel, 20293);
++            writeField(parcel, 2, p -> p.writeString("12.50"));
++            writeField(parcel, 3, p -> p.writeString("USD"));
++            writeField(parcel, 4, p -> {
++                p.writeInt(2);
++                for (int i = 0; i < 2; i++) {
++                    // Google's SafeParcelWriter prefixes each typed-list item
++                    // with its encoded byte length, rather than just 1.
++                    p.writeInt(0);
++                    int itemStart = p.dataPosition();
++                    int item = beginVariable(p, 20293);
++                    final String description = i == 0 ? "synthetic item" : "synthetic tax";
++                    writeField(p, 2, q -> q.writeString(description));
++                    writeField(p, 3, q -> q.writeString("1"));
++                    writeField(p, 4, q -> q.writeString("6.25"));
++                    writeField(p, 5, q -> q.writeString("6.25"));
++                    p.writeInt((4 << 16) | 6);
++                    p.writeInt(i == 0 ? 0 : 1);
++                    writeField(p, 7, q -> q.writeString("USD"));
++                    writeField(p, 99, q -> q.writeString("future line-item field"));
++                    finishVariable(p, item);
++                    finishVariable(p, itemStart);
++                }
++            });
++            finishVariable(parcel, cart);
++            parcel.writeString("outer-sentinel");
++            parcel.setDataPosition(0);
++            com.google.android.gms.wallet.Cart decoded = com.google.android.gms.wallet.Cart.CREATOR.createFromParcel(parcel);
++            assertEquals(2, decoded.getLineItems().size());
++            LineItem second = decoded.getLineItems().get(1);
++            assertEquals("synthetic tax", second.getDescription());
++            assertEquals("1", second.getQuantity());
++            assertEquals("6.25", second.getUnitPrice());
++            assertEquals("6.25", second.getTotalPrice());
++            assertEquals(1, second.getRole());
++            assertEquals("USD", second.getCurrencyCode());
++            assertEquals("outer-sentinel", parcel.readString());
++            assertEquals(0, parcel.dataAvail());
++        } finally { parcel.recycle(); }
++    }
++
++    @Test public void callback12PreservesNativeUiResolutionWithoutPaymentData() throws Exception {
++        Intent intent = new Intent("org.microg.wallet.TEST_RESOLUTION").setPackage(RuntimeEnvironment.getApplication().getPackageName());
++        PendingIntent resolution = PendingIntent.getActivity(RuntimeEnvironment.getApplication(), 71, intent, PendingIntent.FLAG_IMMUTABLE);
++        AtomicInteger calls = new AtomicInteger();
++        Binder receiver = new Binder() {
++            @Override public IInterface queryLocalInterface(String descriptor) { return null; }
++            @Override protected boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
++                assertEquals(12, code);
++                assertEquals(IBinder.FLAG_ONEWAY, flags);
++                assertNull(reply);
++                data.enforceInterface(CALLBACK);
++                assertEquals(1, data.readInt());
++                Status status = Status.CREATOR.createFromParcel(data);
++                assertEquals(CommonStatusCodes.RESOLUTION_REQUIRED, status.getStatusCode());
++                assertTrue(status.hasResolution());
++                assertEquals(resolution, status.getResolution());
++                assertEquals(0, data.readInt());
++                assertEquals(1, data.readInt());
++                assertTrue(Bundle.CREATOR.createFromParcel(data).isEmpty());
++                assertEquals(0, data.dataAvail());
++                calls.incrementAndGet();
++                return true;
++            }
++        };
++        IWalletServiceCallbacks.Stub.asInterface(receiver).onWebPaymentDataLoaded(
++                new Status(CommonStatusCodes.RESOLUTION_REQUIRED, "Test UI resolution", resolution), null, Bundle.EMPTY);
++        assertEquals(1, calls.get());
++    }
++
++    @Test public void chromeTransaction17DispatchesWithoutASynchronousReply() throws Exception {
++        AtomicInteger calls = new AtomicInteger();
++        Binder callback = new Binder();
++        IOwService.Stub service = new IOwService.Stub() {
++            @Override public void isReadyToPay(IsReadyToPayRequest r, Bundle b, IWalletServiceCallbacks c) { fail(); }
++            @Override public void getClientToken(GetClientTokenRequest r, Bundle b, IWalletServiceCallbacks c) { fail(); }
++            @Override public void loadWebPaymentData(WebPaymentDataRequest r, Bundle b, IWalletServiceCallbacks c) {
++                assertNotNull(r);
++                assertEquals("options", b.getString("marker"));
++                assertSame(callback, c.asBinder());
++                calls.incrementAndGet();
++            }
++        };
++        Parcel data = Parcel.obtain();
++        try {
++            data.writeInterfaceToken(SERVICE);
++            writeSdkRequest(data);
++            data.writeInt(1);
++            Bundle options = new Bundle();
++            options.putString("marker", "options");
++            options.writeToParcel(data, 0);
++            data.writeStrongBinder(callback);
++            assertTrue(service.transact(17, data, null, IBinder.FLAG_ONEWAY));
++            assertEquals(1, calls.get());
++        } finally {
++            data.recycle();
++        }
++    }
++
++    @Test public void callback12ContainsAnErrorAndNoPaymentCredential() throws Exception {
++        AtomicInteger calls = new AtomicInteger();
++        Binder receiver = new Binder() {
++            @Override public IInterface queryLocalInterface(String descriptor) { return null; }
++            @Override protected boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
++                assertEquals(12, code);
++                assertEquals(IBinder.FLAG_ONEWAY, flags);
++                assertNull(reply);
++                data.enforceInterface(CALLBACK);
++                assertEquals(1, data.readInt());
++                Status status = Status.CREATOR.createFromParcel(data);
++                assertEquals(CommonStatusCodes.API_NOT_CONNECTED, status.getStatusCode());
++                assertFalse(status.isSuccess());
++                assertEquals(0, data.readInt()); // Nullable WebPaymentData, not an empty/fake token.
++                assertEquals(1, data.readInt());
++                Bundle extras = Bundle.CREATOR.createFromParcel(data);
++                assertTrue(extras.isEmpty());
++                assertEquals(0, data.dataAvail());
++                calls.incrementAndGet();
++                return true;
++            }
++        };
++        IWalletServiceCallbacks.Stub.asInterface(receiver).onWebPaymentDataLoaded(
++                new Status(CommonStatusCodes.API_NOT_CONNECTED, "not supported"), null, Bundle.EMPTY);
++        assertEquals(1, calls.get());
++    }
++}
+diff --git a/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java b/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
+index a414f74..7d70173 100644
+--- a/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
++++ b/play-services-core/src/main/java/org/microg/gms/wallet/OwServiceImpl.java
+@@ -23,9 +23,11 @@ import android.os.RemoteException;
+ import android.util.Log;
+ 
+ import com.google.android.gms.common.api.Status;
++import com.google.android.gms.common.api.CommonStatusCodes;
+ import com.google.android.gms.wallet.GetClientTokenRequest;
+ import com.google.android.gms.wallet.GetClientTokenResponse;
+ import com.google.android.gms.wallet.IsReadyToPayRequest;
++import com.google.android.gms.wallet.WebPaymentDataRequest;
+ import com.google.android.gms.wallet.internal.IOwService;
+ import com.google.android.gms.wallet.internal.IWalletServiceCallbacks;
+ 
+@@ -57,6 +59,19 @@ public class OwServiceImpl extends IOwService.Stub {
+         }
+     }
+ 
++    @Override
++    public void loadWebPaymentData(WebPaymentDataRequest request, Bundle options, IWalletServiceCallbacks callbacks) throws RemoteException {
++        // Chrome waits for callback transaction 12. Leaving request transaction
++        // 17 unhandled leaves Chrome without a completion callback.
++        // A completed error is not a successful payment: never manufacture a
++        // wallet token or advertise a payment UI that is not implemented.
++        callbacks.onWebPaymentDataLoaded(
++                new Status(CommonStatusCodes.API_NOT_CONNECTED,
++                        "Google Pay web payments are not implemented by this microG build"),
++                null,
++                Bundle.EMPTY);
++    }
++
+     @Override
+     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+         if (super.onTransact(code, data, reply, flags)) return true;

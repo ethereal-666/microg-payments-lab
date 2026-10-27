@@ -1,0 +1,3 @@
+# A unified diff has single-space context lines. Check the patched source
+# separately; those context lines are not source-code trailing whitespace.
+*.patch -whitespace
